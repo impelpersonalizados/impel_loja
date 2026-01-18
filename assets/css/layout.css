@@ -1,0 +1,82 @@
+/* Breadcrumb */
+.breadcrumb{
+  display:flex;
+  gap: 8px;
+  align-items:center;
+  color: var(--muted);
+  font-size: .92rem;
+  margin: 10px 0 14px;
+}
+.breadcrumb a{ color: var(--muted); }
+.breadcrumb .sep{ opacity:.6; }
+
+/* Layout produto (igual modelo: galeria esquerda, infos direita) */
+.product{
+  display:grid;
+  grid-template-columns: 460px 1fr;
+  gap: 22px;
+  align-items:start;
+}
+
+@media (max-width: 980px){
+  .product{ grid-template-columns: 1fr; }
+}
+
+/* Galeria */
+.gallery{
+  display:grid;
+  grid-template-columns: 86px 1fr;
+  gap: 12px;
+}
+
+@media (max-width: 520px){
+  .gallery{ grid-template-columns: 1fr; }
+}
+
+.thumbs{
+  display:flex;
+  flex-direction:column;
+  gap: 10px;
+}
+
+@media (max-width: 520px){
+  .thumbs{ flex-direction:row; overflow:auto; padding-bottom: 8px; }
+}
+
+.main-image{
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow:hidden;
+  background: #fff;
+  box-shadow: var(--shadow);
+}
+
+/* Coluna direita */
+.product-info h1{
+  margin: 0 0 6px;
+  font-size: 1.7rem;
+  line-height:1.2;
+}
+
+.code{
+  color: var(--muted);
+  font-size: .92rem;
+  margin-bottom: 10px;
+}
+
+.section{
+  margin-top: 14px;
+}
+
+/* Preço grande */
+.price-box{
+  margin-top: 18px;
+  padding: 16px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface-2);
+}
+.price-main{
+  font-size: 2.1rem;
+  font-weight: 800;
+  color: #2b1d43;

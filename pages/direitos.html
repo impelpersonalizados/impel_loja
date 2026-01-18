@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Direitos Autorais</title>
+
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+
+  <style>
+    .page-top{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+    .page-top a{
+      font-weight: 900;
+      color: #2b1d43;
+    }
+    .doc{
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+    }
+    .doc h1{ margin: 0 0 8px; color:#2b1d43; }
+    .doc p{ color: var(--muted); line-height:1.7; margin: 10px 0; }
+    .doc ul{ color: var(--muted); line-height:1.7; margin: 10px 0; padding-left: 18px; }
+    .doc li{ margin: 8px 0; }
+  </style>
+
+  <script type="module">
+    import { loadPartials } from "../assets/js/api.js";
+    window.addEventListener("DOMContentLoaded", () => loadPartials());
+  </script>
+</head>
+
+<body>
+  <div class="page-top">
+    <a href="./index.html">← Voltar para a página do produto</a>
+  </div>
+
+  <main class="container">
+    <section class="doc">
+      <h1>Direitos Autorais</h1>
+      <p>
+        Este produto é <b>digital</b> e os arquivos disponibilizados são protegidos por <b>direitos autorais</b>.
+      </p>
+
+      <p><b>É permitido:</b></p>
+      <ul>
+        <li>Produzir o <b>produto físico</b> com base nos arquivos adquiridos.</li>
+        <li>Vender o <b>produto físico</b> produzido a partir dos arquivos.</li>
+      </ul>
+
+      <p><b>É proibido:</b></p>
+      <ul>
+        <li>Revender o arquivo digital (ou qualquer parte dele).</li>
+        <li>Compartilhar o arquivo digital (inclusive gratuitamente).</li>
+        <li>Doar o arquivo digital.</li>
+        <li>Disponibilizar o arquivo em grupos, nuvens, drives, redes sociais ou qualquer meio público/privado.</li>
+        <li>Alterar o arquivo e revendê-lo como se fosse um novo produto digital.</li>
+      </ul>
+
+      <p>
+        Ao adquirir este produto, você concorda com estas regras. Em caso de violação, poderão ser tomadas medidas legais.
+      </p>
+    </section>
+  </main>
+
+  <div data-include="../components/footer.html"></div>
+</body>
+</html>
