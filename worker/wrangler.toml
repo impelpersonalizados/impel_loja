@@ -1,0 +1,15 @@
+name = "produto-digital-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+# Variáveis públicas (OK expor no código do Worker, mas NÃO no frontend)
+[vars]
+FRONTEND_ORIGIN = "https://SEUUSUARIO.github.io"
+FRONTEND_BASE_URL = "https://SEUUSUARIO.github.io/SEU-REPO-Ou-ROOT"
+API_BASE_URL = "https://SEU-WORKER.SUBDOMAIN.workers.dev"
+
+# KV binding (grátis)
+[[kv_namespaces]]
+binding = "TOKENS"
+id = "COLE_AQUI_O_ID_DO_KV"
+preview_id = "COLE_AQUI_O_ID_DO_KV_PREVIEW"

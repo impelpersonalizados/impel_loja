@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Termos de Uso</title>
+
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+
+  <style>
+    .page-top{
+      width: 100%;
+      display:flex;
+      justify-content:center;
+      align-items:center;
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+    .page-top a{
+      font-weight: 900;
+      color: #2b1d43;
+    }
+    .doc{
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background:#fff;
+      box-shadow: var(--shadow);
+    }
+    .doc h1{ margin: 0 0 8px; color:#2b1d43; }
+    .doc p{ color: var(--muted); line-height:1.7; margin: 10px 0; }
+    .doc ul{ color: var(--muted); line-height:1.7; margin: 10px 0; padding-left: 18px; }
+    .doc li{ margin: 8px 0; }
+  </style>
+
+  <script type="module">
+    import { loadPartials } from "../assets/js/api.js";
+    window.addEventListener("DOMContentLoaded", () => loadPartials());
+  </script>
+</head>
+
+<body>
+  <div class="page-top">
+    <a href="./index.html">← Voltar para a página do produto</a>
+  </div>
+
+  <main class="container">
+    <section class="doc">
+      <h1>Termos de Uso</h1>
+
+      <p>
+        Ao comprar e/ou acessar este produto digital, você concorda com os termos abaixo.
+      </p>
+
+      <ul>
+        <li>Este é um <b>produto digital</b>. Nenhum item físico será enviado.</li>
+        <li>O acesso ao arquivo é disponibilizado após a confirmação do pagamento.</li>
+        <li>O arquivo é de uso pessoal/comercial <b>para produção do produto físico</b>, conforme as regras de direitos autorais.</li>
+        <li>É proibida a revenda/compartilhamento/doação do arquivo digital.</li>
+        <li>O suporte é fornecido pelos canais informados no rodapé.</li>
+      </ul>
+
+      <p>
+        Podemos atualizar estes termos quando necessário. Recomendamos que você revise esta página periodicamente.
+      </p>
+    </section>
+  </main>
+
+  <div data-include="../components/footer.html"></div>
+</body>
+</html>

@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Pagamento pendente</title>
+
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+
+  <script type="module">
+    import { loadPartials } from "../assets/js/api.js";
+    loadPartials();
+  </script>
+</head>
+
+<body>
+  <div data-include="../components/header.html"></div>
+
+  <main class="container">
+    <section class="section">
+      <h1>Pagamento pendente ⏳</h1>
+      <p>Seu pagamento ainda não foi confirmado. Assim que for aprovado, você poderá acessar o download.</p>
+      <a class="btn btn--primary" href="./index.html">Voltar para a página</a>
+    </section>
+  </main>
+
+  <div data-include="../components/footer.html"></div>
+</body>
+</html>
