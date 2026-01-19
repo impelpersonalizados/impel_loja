@@ -1,0 +1,17 @@
+name = "impel-api"
+main = "src/index.js"
+compatibility_date = "2025-01-01"
+
+[vars]
+# IMPORTANTE: é só o domínio do GitHub Pages (sem /impel_loja)
+FRONTEND_ORIGIN = "https://impelpersonalizados.github.io"
+
+[[kv_namespaces]]
+binding = "SITE_KV"
+id = "d564a8a29cfd42a194ff966b8103bf2e"
+preview_id = "86238726f2504f08908f92d7a3d45298"
+
+[[r2_buckets]]
+binding = "SITE_R2"
+bucket_name = "impel-site"
+preview_bucket_name = "impel-site"
