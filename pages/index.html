@@ -5,104 +5,128 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Produto</title>
 
+  <!-- CSS antigo -->
   <link rel="stylesheet" href="../assets/css/base.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
 
   <style>
+    /* Topo com logo (sem barra de busca) */
     .top-logo{
-      width:100%;
+      width: 100%;
       display:flex;
-      justify-content:center;
       align-items:center;
-      padding:16px;
-      border-bottom:1px solid var(--border);
-      background:#fff;
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
     }
-    .top-logo.left{ justify-content:flex-start; padding-left:24px; }
-    .top-logo.purple{ background:#B389FD; }
-    .top-logo img{ max-height:48px; }
-    .top-logo .ph{ color: var(--muted); font-weight: 900; }
+    .top-logo.is-center{ justify-content:center; }
+    .top-logo.is-left{ justify-content:flex-start; padding-left:24px; }
+    .top-logo.is-purple{ background:#B389FD; border-bottom-color: rgba(0,0,0,.06); }
+    .top-logo img{ max-height: 54px; width:auto; display:block; }
+    .top-logo .ph{ font-weight:900; color: var(--muted); }
+    .top-logo.is-purple .ph{ color:#fff; }
 
-    .box{
-      max-width: 1100px;
-      margin: 0 auto;
+    /* Descrição real embaixo */
+    .desc-bottom{
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
     }
-
-    .gallery{
-      display:grid;
-      grid-template-columns: 90px 1fr;
-      gap:12px;
-      margin-top: 12px;
-    }
-    .thumbs{
-      display:flex;
-      flex-direction:column;
-      gap:8px;
-    }
-    .thumbs img{
-      width:100%;
-      border-radius:10px;
-      cursor:pointer;
-      border:2px solid transparent;
-    }
-    .thumbs img.active{ border-color:#B389FD; }
-    .main-img img{
-      width:100%;
-      border-radius:12px;
+    .desc-bottom h2{ margin:0 0 10px; color:#2b1d43; }
+    .desc-bottom p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.6;
+      white-space: pre-line;
     }
 
-    .price{
-      font-size:28px;
-      font-weight:900;
+    /* mensagens de estado */
+    .state{
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
       color:#2b1d43;
-      margin-top: 12px;
+      font-weight: 800;
     }
-    .muted{ color:var(--muted); }
-
-    .important{
-      background:#f7f4ff;
-      border:1px solid #e5dcff;
-      border-radius:12px;
-      padding:12px;
-      margin:12px 0;
-    }
-
-    .btnWide{ width:100%; margin:16px 0; }
+    .state small{ display:block; color: var(--muted); font-weight: 600; margin-top:6px; }
   </style>
+
+  <!-- footer via component -->
+  <script type="module">
+    import { loadPartials } from "../assets/js/api.js";
+    window.addEventListener("DOMContentLoaded", () => loadPartials());
+  </script>
 </head>
 
 <body>
-  <header id="top" class="top-logo">
-    <span id="logoPh" class="ph">Logo</span>
-    <img id="logo" alt="Logo" style="display:none;" />
+  <!-- Topo só com logo -->
+  <header id="topLogo" class="top-logo is-center">
+    <span id="logoPlaceholder" class="ph">Logo</span>
+    <img id="logoImg" alt="Logo" style="display:none;">
   </header>
 
   <main class="container">
-    <div class="box card" id="content">
-      <p class="muted">Carregando produto...</p>
-    </div>
+    <!-- Conteúdo principal -->
+    <section class="product" id="productWrap">
+      <!-- GALERIA (esquerda) -->
+      <div class="gallery">
+        <div class="thumbs" id="thumbs">
+          <!-- preenchido via JS -->
+        </div>
+
+        <div class="main-image">
+          <img id="mainImg" src="../assets/img/hero.png" alt="Imagem principal">
+        </div>
+      </div>
+
+      <!-- INFOS (direita) -->
+      <div class="product-info">
+        <h1 id="productTitle">Carregando...</h1>
+        <div class="code" id="productCode"></div>
+
+        <!-- Onde era "descrição" agora vira Informações importantes -->
+        <div class="notice">
+          <strong>Informações importantes</strong>
+          <ul class="small" id="importantList"></ul>
+        </div>
+
+        <!-- Opções (chips) -->
+        <div id="optionsArea"></div>
+
+        <!-- Preço -->
+        <div class="price-box">
+          <div class="price-main" id="pixPriceLine">—</div>
+          <div class="price-sub small" id="cardPriceLine"></div>
+
+          <div id="paymentBadges" style="margin-top:10px;"></div>
+
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <button id="buyNowBtn" class="btn btn--primary">Comprar agora</button>
+          </div>
+        </div>
+
+        <div id="stateBox"></div>
+      </div>
+    </section>
+
+    <!-- Descrição real (embaixo de tudo) -->
+    <section class="desc-bottom">
+      <h2>Descrição</h2>
+      <p id="descText">(Sem descrição)</p>
+    </section>
   </main>
 
+  <!-- Rodapé -->
   <div data-include="../components/footer.html"></div>
 
   <script type="module">
     import { CONFIG } from "../assets/js/config.js";
-    import { loadPartials } from "../assets/js/api.js";
-
-    window.addEventListener("DOMContentLoaded", () => loadPartials());
-
-    async function loadRemoteConfig(){
-      try {
-        const res = await fetch(CONFIG.BASE_API_URL + "/api/config", { cache: "no-store" });
-        if (!res.ok) return { __error: `Erro ${res.status} ao buscar config` };
-        const data = await res.json();
-        if (data === null) return null; // ainda não configurado
-        return data;
-      } catch (e) {
-        return { __error: "Falha de rede/CORS ao buscar config" };
-      }
-    }
 
     function esc(str){
       return String(str || "").replace(/[&<>"']/g, m => ({
@@ -110,115 +134,201 @@
       }[m]));
     }
 
-    function render(cfg){
-      const content = document.getElementById("content");
-
-      // topo
-      const top = document.getElementById("top");
-      const logo = document.getElementById("logo");
-      const logoPh = document.getElementById("logoPh");
-
-      top.classList.remove("left","purple");
-      if (cfg.header?.align === "left") top.classList.add("left");
-      if (cfg.header?.bg === "purple") top.classList.add("purple");
-
-      if (cfg.header?.logoUrl) {
-        logo.src = cfg.header.logoUrl;
-        logo.style.display = "block";
-        logoPh.style.display = "none";
-      } else {
-        logo.style.display = "none";
-        logoPh.style.display = "block";
+    async function loadRemoteConfig(){
+      try {
+        const res = await fetch(CONFIG.BASE_API_URL + "/api/config", { cache: "no-store" });
+        if (!res.ok) return { __error: `Erro ${res.status} ao buscar config` };
+        const data = await res.json();
+        return data; // pode ser null
+      } catch {
+        return { __error: "Falha de rede/CORS ao buscar config" };
       }
+    }
 
-      document.title = cfg.title || "Produto";
-
-      // galeria
-      let galleryHTML = "";
-      if (cfg.images?.length) {
-        galleryHTML = `
-          <div class="gallery">
-            <div class="thumbs">
-              ${cfg.images.map((img,i)=>`
-                <img src="${img}" data-i="${i}" class="${i===0?'active':''}" alt="thumb">
-              `).join("")}
-            </div>
-            <div class="main-img">
-              <img id="mainImg" src="${cfg.images[0]}" alt="imagem principal">
-            </div>
-          </div>
-        `;
-      }
-
-      // infos importantes
-      let importantHTML = "";
-      if (cfg.importantLines?.length) {
-        importantHTML = `
-          <div class="important">
-            ${cfg.importantLines.map(l=>`<div>• ${esc(l)}</div>`).join("")}
-          </div>
-        `;
-      }
-
-      // pagamentos
-      const pay = [];
-      if (cfg.payments?.pix) pay.push("Pix");
-      if (cfg.payments?.card) pay.push("Cartão");
-      if (cfg.payments?.boleto) pay.push("Boleto");
-
-      content.innerHTML = `
-        <h1>${esc(cfg.title || "")}</h1>
-        ${galleryHTML}
-        ${importantHTML}
-
-        <div class="price">R$ ${esc(cfg.pixPrice || "")}</div>
-        ${cfg.cardPrice ? `<div class="muted">Cartão: R$ ${esc(cfg.cardPrice)}</div>` : ""}
-        ${(cfg.installments && cfg.installmentValue) ? `<div class="muted">até ${esc(cfg.installments)}x de R$ ${esc(cfg.installmentValue)}</div>` : ""}
-
-        <div class="muted" style="margin:10px 0;">
-          Formas de pagamento: ${pay.length ? pay.join(", ") : "—"}
-        </div>
-
-        <button class="btn btn--primary btnWide" id="buyBtn">Comprar agora</button>
-
-        <div class="muted" style="white-space:pre-line; margin-top: 8px;">
-          ${esc(cfg.descriptionText || "")}
+    function setState(title, detail){
+      const box = document.getElementById("stateBox");
+      box.innerHTML = `
+        <div class="state">
+          ${esc(title)}
+          ${detail ? `<small>${esc(detail)}</small>` : ""}
         </div>
       `;
+    }
 
-      // thumbs troca imagem
-      const mainImg = document.getElementById("mainImg");
-      document.querySelectorAll(".thumbs img").forEach(el=>{
-        el.addEventListener("click", ()=>{
-          document.querySelectorAll(".thumbs img").forEach(i=>i.classList.remove("active"));
-          el.classList.add("active");
-          if (mainImg) mainImg.src = el.src;
+    function applyTopLogo(cfg){
+      const top = document.getElementById("topLogo");
+      const img = document.getElementById("logoImg");
+      const ph = document.getElementById("logoPlaceholder");
+
+      top.classList.remove("is-center","is-left","is-purple");
+
+      const align = cfg.header?.align || "center";
+      const bg = cfg.header?.bg || "white";
+
+      top.classList.add(align === "left" ? "is-left" : "is-center");
+      if (bg === "purple") top.classList.add("is-purple");
+
+      if (cfg.header?.logoUrl) {
+        img.src = cfg.header.logoUrl;
+        img.style.display = "block";
+        ph.style.display = "none";
+      } else {
+        img.style.display = "none";
+        ph.style.display = "block";
+      }
+    }
+
+    function renderOptions(cfg){
+      const optionsArea = document.getElementById("optionsArea");
+      optionsArea.innerHTML = "";
+
+      const options = Array.isArray(cfg.options) ? cfg.options : [];
+      if (!options.length) return;
+
+      options.forEach((opt) => {
+        const label = opt?.label || "Opção";
+        const values = Array.isArray(opt?.values) ? opt.values.filter(Boolean) : [];
+        if (!values.length) return;
+
+        const def = opt?.default && values.includes(opt.default) ? opt.default : values[0];
+
+        const sec = document.createElement("div");
+        sec.className = "section";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "900";
+        title.style.marginBottom = "8px";
+        title.innerHTML = `Selecione: <span style="color:var(--brand)">${esc(label)}</span>`;
+        sec.appendChild(title);
+
+        const chips = document.createElement("div");
+        chips.className = "chips";
+
+        values.forEach((v) => {
+          const btn = document.createElement("button");
+          btn.className = "chip" + (v === def ? " is-active" : "");
+          btn.textContent = v;
+          btn.addEventListener("click", () => {
+            chips.querySelectorAll(".chip").forEach(c => c.classList.remove("is-active"));
+            btn.classList.add("is-active");
+          });
+          chips.appendChild(btn);
         });
-      });
 
-      document.getElementById("buyBtn")?.addEventListener("click", () => {
-        alert("Próximo passo: ligar Mercado Pago.");
+        sec.appendChild(chips);
+        optionsArea.appendChild(sec);
       });
     }
 
+    function renderGallery(cfg){
+      const thumbs = document.getElementById("thumbs");
+      const mainImg = document.getElementById("mainImg");
+      thumbs.innerHTML = "";
+
+      const imgs = Array.isArray(cfg.images) ? cfg.images.filter(Boolean) : [];
+
+      if (!imgs.length) {
+        // fallback
+        mainImg.src = "../assets/img/hero.png";
+        thumbs.innerHTML = `
+          <button class="thumb" data-src="../assets/img/hero.png" aria-label="Imagem 1">
+            <img src="../assets/img/hero.png" alt="thumb 1">
+          </button>
+        `;
+        thumbs.querySelector(".thumb")?.addEventListener("click", () => {
+          mainImg.src = "../assets/img/hero.png";
+        });
+        return;
+      }
+
+      mainImg.src = imgs[0];
+
+      imgs.slice(0, 6).forEach((src, i) => {
+        const btn = document.createElement("button");
+        btn.className = "thumb";
+        btn.setAttribute("data-src", src);
+        btn.setAttribute("aria-label", `Imagem ${i+1}`);
+        btn.innerHTML = `<img src="${src}" alt="thumb ${i+1}">`;
+        btn.addEventListener("click", () => {
+          mainImg.src = src;
+        });
+        thumbs.appendChild(btn);
+      });
+    }
+
+    function render(cfg){
+      document.getElementById("productTitle").textContent = cfg.title || "Produto";
+      document.getElementById("productCode").textContent = cfg.code ? `(Cód: ${cfg.code})` : "";
+
+      // Informações importantes
+      const ul = document.getElementById("importantList");
+      ul.innerHTML = "";
+      const imp = Array.isArray(cfg.importantLines) ? cfg.importantLines : [];
+      if (!imp.length) {
+        const li = document.createElement("li");
+        li.textContent = "Nenhuma informação cadastrada.";
+        ul.appendChild(li);
+      } else {
+        imp.forEach((line) => {
+          const li = document.createElement("li");
+          li.textContent = line;
+          ul.appendChild(li);
+        });
+      }
+
+      // Preço
+      const pix = cfg.pixPrice || "";
+      document.getElementById("pixPriceLine").innerHTML =
+        `R$ ${esc(pix)} <span class="small" style="font-weight:700;color:var(--muted)">no pix</span>`;
+
+      const cardLine = document.getElementById("cardPriceLine");
+      if (cfg.cardPrice && cfg.installments && cfg.installmentValue) {
+        cardLine.textContent =
+          `ou R$ ${cfg.cardPrice} em até ${cfg.installments}x de R$ ${cfg.installmentValue} sem juros`;
+      } else if (cfg.cardPrice) {
+        cardLine.textContent = `Cartão: R$ ${cfg.cardPrice}`;
+      } else {
+        cardLine.textContent = "";
+      }
+
+      // Badges pagamento
+      const badges = [];
+      if (cfg.payments?.pix) badges.push("Pix");
+      if (cfg.payments?.card) badges.push("Cartão");
+      if (cfg.payments?.boleto) badges.push("Boleto");
+      document.getElementById("paymentBadges").innerHTML =
+        badges.map(p => `<span class="tag">${esc(p)}</span>`).join(" ");
+
+      // Descrição real embaixo
+      document.getElementById("descText").textContent =
+        (cfg.descriptionText && cfg.descriptionText.trim()) ? cfg.descriptionText.trim() : "(Sem descrição)";
+
+      // Logo topo
+      applyTopLogo(cfg);
+
+      // Galeria
+      renderGallery(cfg);
+
+      // Opções
+      renderOptions(cfg);
+
+      // Botão comprar (ainda sem MP)
+      document.getElementById("buyNowBtn").onclick = () => {
+        alert("Próximo passo: integrar Mercado Pago.");
+      };
+    }
+
     (async () => {
-      const content = document.getElementById("content");
       const cfg = await loadRemoteConfig();
 
       if (cfg && cfg.__error) {
-        content.innerHTML = `
-          <h2>Erro ao carregar</h2>
-          <p class="muted">${cfg.__error}</p>
-          <p class="muted">Abra o console (F12) para ver detalhes. Se for CORS, precisamos ajustar o Worker.</p>
-        `;
+        setState("Erro ao carregar", cfg.__error);
         return;
       }
 
       if (cfg === null) {
-        content.innerHTML = `
-          <h2>Produto ainda não configurado</h2>
-          <p class="muted">Abra o admin e clique em “Salvar no servidor”. Depois atualize esta página.</p>
-        `;
+        setState("Produto ainda não configurado", "Abra o admin e clique em “Salvar no servidor”.");
+        document.getElementById("productTitle").textContent = "Produto";
         return;
       }
 
