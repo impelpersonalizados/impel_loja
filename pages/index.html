@@ -22,11 +22,18 @@
     .top-logo.left{ justify-content:flex-start; padding-left:24px; }
     .top-logo.purple{ background:#B389FD; }
     .top-logo img{ max-height:48px; }
+    .top-logo .ph{ color: var(--muted); font-weight: 900; }
+
+    .box{
+      max-width: 1100px;
+      margin: 0 auto;
+    }
 
     .gallery{
       display:grid;
-      grid-template-columns: 80px 1fr;
+      grid-template-columns: 90px 1fr;
       gap:12px;
+      margin-top: 12px;
     }
     .thumbs{
       display:flex;
@@ -35,12 +42,11 @@
     }
     .thumbs img{
       width:100%;
-      border-radius:8px;
+      border-radius:10px;
       cursor:pointer;
       border:2px solid transparent;
     }
     .thumbs img.active{ border-color:#B389FD; }
-
     .main-img img{
       width:100%;
       border-radius:12px;
@@ -50,8 +56,10 @@
       font-size:28px;
       font-weight:900;
       color:#2b1d43;
+      margin-top: 12px;
     }
     .muted{ color:var(--muted); }
+
     .important{
       background:#f7f4ff;
       border:1px solid #e5dcff;
@@ -59,16 +67,19 @@
       padding:12px;
       margin:12px 0;
     }
+
+    .btnWide{ width:100%; margin:16px 0; }
   </style>
 </head>
 
 <body>
   <header id="top" class="top-logo">
-    <img id="logo" alt="Logo" />
+    <span id="logoPh" class="ph">Logo</span>
+    <img id="logo" alt="Logo" style="display:none;" />
   </header>
 
   <main class="container">
-    <div id="content" class="card">
+    <div class="box card" id="content">
       <p class="muted">Carregando produto...</p>
     </div>
   </main>
@@ -79,40 +90,61 @@
     import { CONFIG } from "../assets/js/config.js";
     import { loadPartials } from "../assets/js/api.js";
 
-    loadPartials();
+    window.addEventListener("DOMContentLoaded", () => loadPartials());
 
-    async function loadConfig(){
-      const res = await fetch(CONFIG.BASE_API_URL + "/api/config");
-      if(!res.ok) return null;
-      return await res.json();
+    async function loadRemoteConfig(){
+      try {
+        const res = await fetch(CONFIG.BASE_API_URL + "/api/config", { cache: "no-store" });
+        if (!res.ok) return { __error: `Erro ${res.status} ao buscar config` };
+        const data = await res.json();
+        if (data === null) return null; // ainda não configurado
+        return data;
+      } catch (e) {
+        return { __error: "Falha de rede/CORS ao buscar config" };
+      }
+    }
+
+    function esc(str){
+      return String(str || "").replace(/[&<>"']/g, m => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[m]));
     }
 
     function render(cfg){
-      document.title = cfg.title || "Produto";
+      const content = document.getElementById("content");
 
       // topo
       const top = document.getElementById("top");
-      if(cfg.header?.align === "left") top.classList.add("left");
-      if(cfg.header?.bg === "purple") top.classList.add("purple");
+      const logo = document.getElementById("logo");
+      const logoPh = document.getElementById("logoPh");
 
-      if(cfg.header?.logoUrl){
-        document.getElementById("logo").src = cfg.header.logoUrl;
+      top.classList.remove("left","purple");
+      if (cfg.header?.align === "left") top.classList.add("left");
+      if (cfg.header?.bg === "purple") top.classList.add("purple");
+
+      if (cfg.header?.logoUrl) {
+        logo.src = cfg.header.logoUrl;
+        logo.style.display = "block";
+        logoPh.style.display = "none";
       } else {
-        document.getElementById("logo").style.display = "none";
+        logo.style.display = "none";
+        logoPh.style.display = "block";
       }
+
+      document.title = cfg.title || "Produto";
 
       // galeria
       let galleryHTML = "";
-      if(cfg.images?.length){
+      if (cfg.images?.length) {
         galleryHTML = `
           <div class="gallery">
             <div class="thumbs">
               ${cfg.images.map((img,i)=>`
-                <img src="${img}" data-i="${i}" class="${i===0?'active':''}">
+                <img src="${img}" data-i="${i}" class="${i===0?'active':''}" alt="thumb">
               `).join("")}
             </div>
             <div class="main-img">
-              <img id="mainImg" src="${cfg.images[0]}">
+              <img id="mainImg" src="${cfg.images[0]}" alt="imagem principal">
             </div>
           </div>
         `;
@@ -120,62 +152,76 @@
 
       // infos importantes
       let importantHTML = "";
-      if(cfg.importantLines?.length){
+      if (cfg.importantLines?.length) {
         importantHTML = `
           <div class="important">
-            ${cfg.importantLines.map(l=>`<div>• ${l}</div>`).join("")}
+            ${cfg.importantLines.map(l=>`<div>• ${esc(l)}</div>`).join("")}
           </div>
         `;
       }
 
       // pagamentos
-      let payHTML = [];
-      if(cfg.payments?.pix) payHTML.push("Pix");
-      if(cfg.payments?.card) payHTML.push("Cartão");
-      if(cfg.payments?.boleto) payHTML.push("Boleto");
+      const pay = [];
+      if (cfg.payments?.pix) pay.push("Pix");
+      if (cfg.payments?.card) pay.push("Cartão");
+      if (cfg.payments?.boleto) pay.push("Boleto");
 
-      document.getElementById("content").innerHTML = `
-        <h1>${cfg.title || ""}</h1>
+      content.innerHTML = `
+        <h1>${esc(cfg.title || "")}</h1>
         ${galleryHTML}
-
         ${importantHTML}
 
-        <div style="margin-top:14px;">
-          <div class="price">R$ ${cfg.pixPrice || ""}</div>
-          ${cfg.cardPrice ? `<div class="muted">Cartão: R$ ${cfg.cardPrice}</div>` : ""}
-          ${cfg.installments ? `<div class="muted">até ${cfg.installments}x de R$ ${cfg.installmentValue}</div>` : ""}
-        </div>
+        <div class="price">R$ ${esc(cfg.pixPrice || "")}</div>
+        ${cfg.cardPrice ? `<div class="muted">Cartão: R$ ${esc(cfg.cardPrice)}</div>` : ""}
+        ${(cfg.installments && cfg.installmentValue) ? `<div class="muted">até ${esc(cfg.installments)}x de R$ ${esc(cfg.installmentValue)}</div>` : ""}
 
         <div class="muted" style="margin:10px 0;">
-          Formas de pagamento: ${payHTML.join(", ")}
+          Formas de pagamento: ${pay.length ? pay.join(", ") : "—"}
         </div>
 
-        <button class="btn btn--primary" style="width:100%;margin:16px 0;">
-          Comprar agora
-        </button>
+        <button class="btn btn--primary btnWide" id="buyBtn">Comprar agora</button>
 
-        <div class="muted" style="white-space:pre-line;">
-          ${cfg.descriptionText || ""}
+        <div class="muted" style="white-space:pre-line; margin-top: 8px;">
+          ${esc(cfg.descriptionText || "")}
         </div>
       `;
 
-      // trocar imagem
+      // thumbs troca imagem
+      const mainImg = document.getElementById("mainImg");
       document.querySelectorAll(".thumbs img").forEach(el=>{
         el.addEventListener("click", ()=>{
           document.querySelectorAll(".thumbs img").forEach(i=>i.classList.remove("active"));
           el.classList.add("active");
-          document.getElementById("mainImg").src = el.src;
+          if (mainImg) mainImg.src = el.src;
         });
+      });
+
+      document.getElementById("buyBtn")?.addEventListener("click", () => {
+        alert("Próximo passo: ligar Mercado Pago.");
       });
     }
 
-    (async ()=>{
-      const cfg = await loadConfig();
-      if(!cfg){
-        document.getElementById("content").innerHTML =
-          "<p class='muted'>Produto ainda não configurado.</p>";
+    (async () => {
+      const content = document.getElementById("content");
+      const cfg = await loadRemoteConfig();
+
+      if (cfg && cfg.__error) {
+        content.innerHTML = `
+          <h2>Erro ao carregar</h2>
+          <p class="muted">${cfg.__error}</p>
+          <p class="muted">Abra o console (F12) para ver detalhes. Se for CORS, precisamos ajustar o Worker.</p>
+        `;
         return;
       }
+
+      if (cfg === null) {
+        content.innerHTML = `
+          <h2>Produto ainda não configurado</h2>
+          <p class="muted">Abra o admin e clique em “Salvar no servidor”. Depois atualize esta página.</p>
+        `;
+        return;
+      }
+
       render(cfg);
     })();
   </script>
