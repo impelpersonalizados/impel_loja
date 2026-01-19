@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Admin (Online)</title>
+  <title>Admin Online</title>
 
   <link rel="stylesheet" href="../assets/css/base.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
@@ -14,6 +14,7 @@
     .field{ display:flex; flex-direction:column; gap:6px; margin: 10px 0; }
     textarea{ min-height: 120px; padding:12px; border-radius:12px; border:1px solid var(--border); }
     input,select{ padding:12px; border-radius:12px; border:1px solid var(--border); }
+    .miniBox{ padding:12px; border:1px solid var(--border); border-radius:12px; background:#fff; }
   </style>
 </head>
 
@@ -21,10 +22,10 @@
   <main class="container">
     <div class="box card">
       <h1 style="margin-top:0;">Admin (Online)</h1>
-      <p class="muted">Tudo aqui salva no servidor (Cloudflare KV) e funciona em qualquer dispositivo.</p>
+      <p class="muted">Salva no servidor (Cloudflare KV) e funciona em qualquer dispositivo.</p>
 
       <div class="field">
-        <label><b>ADMIN TOKEN</b> (não compartilhar)</label>
+        <label><b>ADMIN TOKEN</b></label>
         <input id="adminToken" type="password" placeholder="Cole seu ADMIN_TOKEN aqui" />
       </div>
 
@@ -87,7 +88,7 @@
         <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
       </div>
       <div class="field">
-        <label>Logo URL (auto preenchido ao enviar)</label>
+        <label>Logo URL</label>
         <input id="logoUrl" />
       </div>
       <div class="field">
@@ -109,8 +110,13 @@
 
       <h3>Imagens do produto</h3>
       <div class="field">
-        <label>Upload de imagens (pode selecionar várias)</label>
+        <label>Upload de imagens (várias)</label>
         <input id="imgsFile" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+      </div>
+
+      <div class="field">
+        <label>Lista de URLs das imagens (será usada no site)</label>
+        <div id="imagesList" class="miniBox"></div>
       </div>
 
       <button id="btnSave" class="btn btn--primary">Salvar no servidor</button>
@@ -122,6 +128,6 @@
     </div>
   </main>
 
-  <script type="module" src="../assets/js/admin-online.js"></script>
+  <script src="../assets/js/admin-online.js"></script>
 </body>
 </html>
