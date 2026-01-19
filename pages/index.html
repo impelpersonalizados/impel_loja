@@ -3,365 +3,181 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Página do Produto</title>
+  <title>Produto</title>
 
   <link rel="stylesheet" href="../assets/css/base.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
 
   <style>
-    /* topo simples só com logo */
     .top-logo{
-      width: 100%;
-      display: flex;
-      align-items: center;
-      padding: 16px 12px;
-      border-bottom: 1px solid var(--border);
-      background: #fff;
-    }
-    .top-logo.is-center{ justify-content: center; }
-    .top-logo.is-left{ justify-content: flex-start; padding-left: 24px; }
-
-    .top-logo img{
-      max-height: 54px;
-      width: auto;
-      display:block;
-    }
-    .top-logo .placeholder{
-      color: var(--muted);
-      font-weight: 800;
-      font-size: .95rem;
-    }
-
-    /* descrição final (embaixo de tudo) */
-    .desc-bottom{
-      margin-top: 18px;
-      padding: 16px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: #fff;
-      box-shadow: var(--shadow);
-    }
-    .desc-bottom h2{
-      margin: 0 0 10px;
-      color: #2b1d43;
-    }
-    .desc-bottom p{
-      margin: 0;
-      color: var(--muted);
-      line-height: 1.6;
-      white-space: pre-line;
-    }
-
-    /* ===== Rodapé (CSS aqui só pra garantir) ===== */
-    .site-footer{
-      margin-top: 30px;
-      border-top: 1px solid var(--border);
-      background: #fff;
-    }
-    .site-footer__inner{
-      max-width: var(--max);
-      margin: 0 auto;
-      padding: 18px 16px 26px;
-    }
-    .site-footer__grid{
-      display:grid;
-      grid-template-columns: 1.4fr .6fr;
-      gap: 18px;
-    }
-    @media (max-width: 900px){
-      .site-footer__grid{ grid-template-columns: 1fr; }
-    }
-    .site-footer__title{
-      font-weight: 900;
-      color: #2b1d43;
-      margin-bottom: 8px;
-    }
-    .site-footer__subtitle{
-      font-weight: 900;
-      color: #2b1d43;
-      margin-bottom: 10px;
-    }
-    .site-footer__text{
-      margin: 10px 0;
-      color: var(--muted);
-      line-height: 1.55;
-    }
-    .site-footer__contacts{
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      background: var(--surface-2);
-      padding: 14px;
-    }
-    .site-footer__contact{
-      margin: 8px 0;
-      color: #2b1d43;
-      font-weight: 800;
-    }
-    .site-footer__mini{
-      margin-top: 12px;
-      color: var(--muted);
-      font-size: .92rem;
+      width:100%;
       display:flex;
+      justify-content:center;
       align-items:center;
-      gap: 8px;
+      padding:16px;
+      border-bottom:1px solid var(--border);
+      background:#fff;
     }
-    .site-footer__mini .dot{
-      width: 8px;
-      height: 8px;
-      border-radius: 999px;
-      background: var(--brand);
-      display:inline-block;
+    .top-logo.left{ justify-content:flex-start; padding-left:24px; }
+    .top-logo.purple{ background:#B389FD; }
+    .top-logo img{ max-height:48px; }
+
+    .gallery{
+      display:grid;
+      grid-template-columns: 80px 1fr;
+      gap:12px;
+    }
+    .thumbs{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .thumbs img{
+      width:100%;
+      border-radius:8px;
+      cursor:pointer;
+      border:2px solid transparent;
+    }
+    .thumbs img.active{ border-color:#B389FD; }
+
+    .main-img img{
+      width:100%;
+      border-radius:12px;
+    }
+
+    .price{
+      font-size:28px;
+      font-weight:900;
+      color:#2b1d43;
+    }
+    .muted{ color:var(--muted); }
+    .important{
+      background:#f7f4ff;
+      border:1px solid #e5dcff;
+      border-radius:12px;
+      padding:12px;
+      margin:12px 0;
     }
   </style>
-
-  <!-- ✅ Carrega só o footer como componente -->
-  <script type="module">
-    import { loadPartials } from "../assets/js/api.js";
-    window.addEventListener("DOMContentLoaded", () => loadPartials());
-  </script>
 </head>
 
 <body>
-  <!-- TOPO LOGO -->
-  <header id="topLogo" class="top-logo is-center">
-    <span id="logoPlaceholder" class="placeholder">Sua logo aqui</span>
-    <img id="logoImg" alt="Logo" style="display:none;">
+  <header id="top" class="top-logo">
+    <img id="logo" alt="Logo" />
   </header>
 
   <main class="container">
-    <section class="product">
-      <!-- GALERIA -->
-      <div class="gallery">
-        <div class="thumbs" id="thumbs">
-          <button class="thumb" data-src="../assets/img/hero.png" aria-label="Imagem 1">
-            <img src="../assets/img/hero.png" alt="thumb 1">
-          </button>
-          <button class="thumb" data-src="../assets/img/hero.png" aria-label="Imagem 2">
-            <img src="../assets/img/hero.png" alt="thumb 2">
-          </button>
-          <button class="thumb" data-src="../assets/img/hero.png" aria-label="Imagem 3">
-            <img src="../assets/img/hero.png" alt="thumb 3">
-          </button>
-        </div>
-
-        <div class="main-image">
-          <img id="mainImg" src="../assets/img/hero.png" alt="Imagem principal">
-        </div>
-      </div>
-
-      <!-- INFOS -->
-      <div class="product-info">
-        <h1 id="productTitle">Produto</h1>
-        <div class="code" id="productCode"></div>
-
-        <!-- INFORMAÇÕES IMPORTANTES -->
-        <div class="notice">
-          <strong>Informações importantes</strong>
-          <ul class="small" id="importantList"></ul>
-        </div>
-
-        <!-- opções dinâmicas -->
-        <div id="optionsArea"></div>
-
-        <div class="price-box">
-          <div class="price-main" id="pixPriceLine"></div>
-          <div class="price-sub small" id="cardPriceLine"></div>
-          <div id="paymentBadges" style="margin-top:10px;"></div>
-
-          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
-            <button id="buyNowBtn" class="btn btn--primary">Comprar agora</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- DESCRIÇÃO REAL (embaixo) -->
-    <section class="desc-bottom">
-      <h2>Descrição</h2>
-      <p id="descText">(Sem descrição)</p>
-    </section>
+    <div id="content" class="card">
+      <p class="muted">Carregando produto...</p>
+    </div>
   </main>
 
-  <!-- ✅ Rodapé via componente -->
   <div data-include="../components/footer.html"></div>
 
   <script type="module">
-    const STORAGE_KEY = "site_product_config_v1";
+    import { CONFIG } from "../assets/js/config.js";
+    import { loadPartials } from "../assets/js/api.js";
 
-    function loadConfig(){
-      try{
-        const raw = localStorage.getItem(STORAGE_KEY);
-        return raw ? JSON.parse(raw) : null;
-      } catch {
-        return null;
+    loadPartials();
+
+    async function loadConfig(){
+      const res = await fetch(CONFIG.BASE_API_URL + "/api/config");
+      if(!res.ok) return null;
+      return await res.json();
+    }
+
+    function render(cfg){
+      document.title = cfg.title || "Produto";
+
+      // topo
+      const top = document.getElementById("top");
+      if(cfg.header?.align === "left") top.classList.add("left");
+      if(cfg.header?.bg === "purple") top.classList.add("purple");
+
+      if(cfg.header?.logoUrl){
+        document.getElementById("logo").src = cfg.header.logoUrl;
+      } else {
+        document.getElementById("logo").style.display = "none";
       }
-    }
 
-    function esc(str){
-      return String(str || "").replace(/[&<>"']/g, m => ({
-        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
-      }[m]));
-    }
+      // galeria
+      let galleryHTML = "";
+      if(cfg.images?.length){
+        galleryHTML = `
+          <div class="gallery">
+            <div class="thumbs">
+              ${cfg.images.map((img,i)=>`
+                <img src="${img}" data-i="${i}" class="${i===0?'active':''}">
+              `).join("")}
+            </div>
+            <div class="main-img">
+              <img id="mainImg" src="${cfg.images[0]}">
+            </div>
+          </div>
+        `;
+      }
 
-    const cfg = loadConfig() || {
-      title: "Produto",
-      code: "",
-      pixPrice: "0,00",
-      cardPrice: "",
-      installments: 1,
-      installmentValue: "",
-      payments: { pix: true, card: true, boleto: false },
-      importantLines: [],
-      descriptionText: "",
-      images: [],
-      options: [],
-      header: { logoDataUrl:"", align:"center", bg:"white" },
-      footer: {}
-    };
+      // infos importantes
+      let importantHTML = "";
+      if(cfg.importantLines?.length){
+        importantHTML = `
+          <div class="important">
+            ${cfg.importantLines.map(l=>`<div>• ${l}</div>`).join("")}
+          </div>
+        `;
+      }
 
-    // ===== Topo logo =====
-    const topLogo = document.getElementById("topLogo");
-    const logoImg = document.getElementById("logoImg");
-    const logoPlaceholder = document.getElementById("logoPlaceholder");
-    const headerCfg = cfg.header || { logoDataUrl:"", align:"center", bg:"white" };
+      // pagamentos
+      let payHTML = [];
+      if(cfg.payments?.pix) payHTML.push("Pix");
+      if(cfg.payments?.card) payHTML.push("Cartão");
+      if(cfg.payments?.boleto) payHTML.push("Boleto");
 
-    if (headerCfg.bg === "purple") {
-      topLogo.style.background = "#B389FD";
-      topLogo.style.borderBottomColor = "rgba(0,0,0,.06)";
-      logoPlaceholder.style.color = "#fff";
-    } else {
-      topLogo.style.background = "#ffffff";
-      topLogo.style.borderBottomColor = "var(--border)";
-      logoPlaceholder.style.color = "var(--muted)";
-    }
+      document.getElementById("content").innerHTML = `
+        <h1>${cfg.title || ""}</h1>
+        ${galleryHTML}
 
-    topLogo.classList.remove("is-center","is-left");
-    topLogo.classList.add(headerCfg.align === "left" ? "is-left" : "is-center");
+        ${importantHTML}
 
-    if (headerCfg.logoDataUrl) {
-      logoImg.src = headerCfg.logoDataUrl;
-      logoImg.style.display = "block";
-      logoPlaceholder.style.display = "none";
-    } else {
-      logoImg.style.display = "none";
-      logoPlaceholder.style.display = "block";
-    }
+        <div style="margin-top:14px;">
+          <div class="price">R$ ${cfg.pixPrice || ""}</div>
+          ${cfg.cardPrice ? `<div class="muted">Cartão: R$ ${cfg.cardPrice}</div>` : ""}
+          ${cfg.installments ? `<div class="muted">até ${cfg.installments}x de R$ ${cfg.installmentValue}</div>` : ""}
+        </div>
 
-    // ===== Elements =====
-    const mainImg = document.getElementById("mainImg");
-    const thumbsWrap = document.getElementById("thumbs");
-    const productTitle = document.getElementById("productTitle");
-    const productCode = document.getElementById("productCode");
+        <div class="muted" style="margin:10px 0;">
+          Formas de pagamento: ${payHTML.join(", ")}
+        </div>
 
-    const importantList = document.getElementById("importantList");
-    const descText = document.getElementById("descText");
+        <button class="btn btn--primary" style="width:100%;margin:16px 0;">
+          Comprar agora
+        </button>
 
-    const pixPriceLine = document.getElementById("pixPriceLine");
-    const cardPriceLine = document.getElementById("cardPriceLine");
-    const paymentBadges = document.getElementById("paymentBadges");
-    const optionsArea = document.getElementById("optionsArea");
+        <div class="muted" style="white-space:pre-line;">
+          ${cfg.descriptionText || ""}
+        </div>
+      `;
 
-    // Base
-    productTitle.textContent = cfg.title || "Produto";
-    productCode.textContent = cfg.code ? `(Cód: ${cfg.code})` : "";
-
-    // Info importante
-    importantList.innerHTML = "";
-    (cfg.importantLines || []).forEach(line => {
-      const li = document.createElement("li");
-      li.textContent = line;
-      importantList.appendChild(li);
-    });
-    if (!(cfg.importantLines || []).length) {
-      const li = document.createElement("li");
-      li.textContent = "Nenhuma informação cadastrada.";
-      importantList.appendChild(li);
-    }
-
-    // Descrição real
-    descText.textContent = cfg.descriptionText?.trim() ? cfg.descriptionText.trim() : "(Sem descrição)";
-
-    // Preços
-    pixPriceLine.innerHTML = `R$ ${esc(cfg.pixPrice || "0,00")} <span class="small" style="font-weight:700;color:var(--muted)">no pix</span>`;
-    if (cfg.cardPrice && cfg.installments && cfg.installmentValue) {
-      cardPriceLine.textContent = `ou R$ ${cfg.cardPrice} em até ${cfg.installments}x de R$ ${cfg.installmentValue} sem juros`;
-    } else {
-      cardPriceLine.textContent = "";
-    }
-
-    // Pagamentos
-    const pays = [];
-    if (cfg.payments?.pix) pays.push("Pix");
-    if (cfg.payments?.card) pays.push("Cartão");
-    if (cfg.payments?.boleto) pays.push("Boleto");
-    paymentBadges.innerHTML = pays.map(p => `<span class="tag">${esc(p)}</span>`).join(" ");
-
-    // Imagens
-    if (Array.isArray(cfg.images) && cfg.images.length) {
-      mainImg.src = cfg.images[0];
-      thumbsWrap.innerHTML = "";
-      cfg.images.slice(0, 6).forEach((src, i) => {
-        const b = document.createElement("button");
-        b.className = "thumb";
-        b.setAttribute("data-src", src);
-        b.setAttribute("aria-label", `Imagem ${i+1}`);
-        b.innerHTML = `<img src="${src}" alt="thumb ${i+1}">`;
-        b.onclick = () => mainImg.src = src;
-        thumbsWrap.appendChild(b);
-      });
-    } else {
-      document.querySelectorAll(".thumb").forEach(btn => {
-        btn.addEventListener("click", () => {
-          const src = btn.getAttribute("data-src");
-          if (src) mainImg.src = src;
+      // trocar imagem
+      document.querySelectorAll(".thumbs img").forEach(el=>{
+        el.addEventListener("click", ()=>{
+          document.querySelectorAll(".thumbs img").forEach(i=>i.classList.remove("active"));
+          el.classList.add("active");
+          document.getElementById("mainImg").src = el.src;
         });
       });
     }
 
-    // Opções
-    const selected = {};
-    optionsArea.innerHTML = "";
-
-    (cfg.options || []).forEach(opt => {
-      const label = opt?.label || "Opção";
-      const values = Array.isArray(opt?.values) ? opt.values.filter(Boolean) : [];
-      if (!values.length) return;
-
-      const def = opt?.default && values.includes(opt.default) ? opt.default : values[0];
-      selected[opt.id] = def;
-
-      const sec = document.createElement("div");
-      sec.className = "section";
-
-      const t = document.createElement("div");
-      t.style.fontWeight = "900";
-      t.style.marginBottom = "8px";
-      t.innerHTML = `Selecione: <span style="color:var(--brand)">${esc(label)}</span>`;
-      sec.appendChild(t);
-
-      const chips = document.createElement("div");
-      chips.className = "chips";
-
-      values.forEach(v => {
-        const c = document.createElement("button");
-        c.className = "chip" + (v === def ? " is-active" : "");
-        c.textContent = v;
-        c.onclick = () => {
-          chips.querySelectorAll(".chip").forEach(x => x.classList.remove("is-active"));
-          c.classList.add("is-active");
-          selected[opt.id] = v;
-        };
-        chips.appendChild(c);
-      });
-
-      sec.appendChild(chips);
-      optionsArea.appendChild(sec);
-    });
-
-    document.getElementById("buyNowBtn").onclick = () => {
-      alert("Pronto! Próximo passo: checkout.");
-    };
+    (async ()=>{
+      const cfg = await loadConfig();
+      if(!cfg){
+        document.getElementById("content").innerHTML =
+          "<p class='muted'>Produto ainda não configurado.</p>";
+        return;
+      }
+      render(cfg);
+    })();
   </script>
 </body>
 </html>
