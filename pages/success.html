@@ -1,150 +1,59 @@
-<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pagamento confirmado</title>
-
-  <link rel="stylesheet" href="../assets/css/base.css" />
-  <link rel="stylesheet" href="../assets/csslayout.css" />
-  <link rel="stylesheet" href="../assets/css/components.css" />
-
-  <style>
-    .wrap{
-      max-width: 560px;
-      margin: 40px auto;
-      padding: 24px;
-      background: #fff;
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      box-shadow: var(--shadow);
-      text-align: center;
-    }
-    h1{ color:#2b1d43; }
-    .muted{ color: var(--muted); }
-    .ok{
-      margin-top: 16px;
-      padding: 14px;
-      background: #f0fff6;
-      border: 1px solid #b7efd2;
-      border-radius: 12px;
-      color: #136f3c;
-      font-weight: 800;
-    }
-    .wait{
-      margin-top: 16px;
-      padding: 14px;
-      background: #fff9ec;
-      border: 1px solid #ffe1a3;
-      border-radius: 12px;
-      color: #8a5b00;
-      font-weight: 800;
-    }
-    .err{
-      margin-top: 16px;
-      padding: 14px;
-      background: #fff1f1;
-      border: 1px solid #ffc9c9;
-      border-radius: 12px;
-      color: #8a1c1c;
-      font-weight: 800;
-    }
-    .actions{
-      margin-top: 18px;
-      display:flex;
-      gap:10px;
-      justify-content:center;
-      flex-wrap:wrap;
-    }
-  </style>
-</head>
-
-<body>
-  <main class="container">
-    <div class="wrap">
-      <h1>Pagamento</h1>
-
-      <p class="muted" id="statusText">
-        Estamos confirmando seu pagamento...
-      </p>
-
-      <div id="resultBox"></div>
-
-      <div class="actions" id="actions" style="display:none;">
-        <a id="downloadBtn" class="btn btn--primary" href="#">Baixar arquivo</a>
+<div style="font-family: Arial, sans-serif; font-size:14px; color:#222; background:#f6f6fb; padding:18px;">
+  <div style="max-width:620px; margin:0 auto; background:#ffffff; border:1px solid #e6e1f3; border-radius:12px; overflow:hidden;">
+    <div style="background:#B389FD; padding:16px;">
+      <div style="font-size:18px; font-weight:800; color:#ffffff;">
+        Impel Personalizados
+      </div>
+      <div style="font-size:13px; color:#ffffff; opacity:.95; margin-top:4px;">
+        Seu pagamento foi confirmado ✅
       </div>
     </div>
-  </main>
 
-  <script type="module">
-    import { CONFIG } from "../assets/js/config.js";
+    <div style="padding:18px;">
+      <p style="margin:0 0 12px; line-height:1.6;">
+        Olá!
+      </p>
 
-    const params = new URLSearchParams(window.location.search);
-    const paymentId =
-      params.get("payment_id") ||
-      params.get("collection_id") ||
-      params.get("paymentId");
+      <p style="margin:0 0 12px; line-height:1.6;">
+        Seu pagamento foi confirmado com sucesso. O seu download já está liberado.
+      </p>
 
-    const statusText = document.getElementById("statusText");
-    const resultBox = document.getElementById("resultBox");
-    const actions = document.getElementById("actions");
-    const downloadBtn = document.getElementById("downloadBtn");
+      <div style="padding:12px; background:#faf7ff; border:1px solid #e6e1f3; border-radius:10px; margin:14px 0;">
+        <div style="font-weight:800; margin-bottom:6px;">Produto</div>
+        <div>{{product_title}}</div>
+      </div>
 
-    if (!paymentId) {
-      statusText.textContent = "Pagamento não identificado.";
-      resultBox.innerHTML = `<div class="err">Não foi possível identificar o pagamento.</div>`;
-    } else {
-      checkPayment();
-    }
+      <div style="margin:16px 0;">
+        <a href="{{download_link}}"
+           style="display:inline-block; background:#B389FD; color:#ffffff; text-decoration:none; font-weight:800; padding:12px 16px; border-radius:10px;">
+          Baixar arquivo
+        </a>
+      </div>
 
-    async function checkPayment(){
-      try {
-        const res = await fetch(
-          CONFIG.BASE_API_URL + "/api/check?payment_id=" + encodeURIComponent(paymentId),
-          { cache: "no-store" }
-        );
+      <p style="margin:0 0 10px; color:#555; line-height:1.6;">
+        Se o botão não funcionar, copie e cole este link no navegador:
+      </p>
 
-        const data = await res.json().catch(()=> ({}));
+      <div style="word-break:break-all; padding:12px; border:1px dashed #e6e1f3; border-radius:10px; background:#ffffff; color:#333;">
+        {{download_link}}
+      </div>
 
-        if (!res.ok) {
-          throw new Error("Erro ao verificar pagamento");
-        }
+      <div style="margin-top:14px; padding:12px; border-radius:10px; background:#fff9ec; border:1px solid #ffe1a3; color:#7a5200;">
+        <strong>Importante:</strong>
+        <div style="margin-top:6px; line-height:1.6;">
+          • Este link é pessoal e expira em 48 horas.<br/>
+          • Guarde este e-mail para baixar depois se precisar.
+        </div>
+      </div>
 
-        if (!data.approved) {
-          statusText.textContent = "Pagamento ainda não confirmado.";
-          resultBox.innerHTML = `
-            <div class="wait">
-              Seu pagamento está sendo processado.<br>
-              Se você acabou de pagar, aguarde alguns instantes e atualize esta página.
-            </div>
-          `;
-          return;
-        }
+      <p style="margin:16px 0 0; color:#555;">
+        Atenciosamente,<br/>
+        <strong>Impel Personalizados</strong>
+      </p>
+    </div>
 
-        // APROVADO
-        statusText.textContent = "Pagamento confirmado!";
-        resultBox.innerHTML = `
-          <div class="ok">
-            Seu pagamento foi aprovado com sucesso 🎉<br>
-            Clique abaixo para baixar seu arquivo.
-          </div>
-        `;
-
-        downloadBtn.href =
-          CONFIG.BASE_API_URL + "/api/download?token=" + encodeURIComponent(data.token);
-
-        actions.style.display = "flex";
-
-      } catch (e) {
-        statusText.textContent = "Erro ao verificar pagamento.";
-        resultBox.innerHTML = `
-          <div class="err">
-            Ocorreu um erro ao confirmar seu pagamento.<br>
-            Tente atualizar a página.
-          </div>
-        `;
-      }
-    }
-  </script>
-</body>
-</html>
+    <div style="padding:14px 18px; background:#ffffff; border-top:1px solid #e6e1f3; color:#666; font-size:12px;">
+      WhatsApp: (74) 99964-1627 • Instagram: @impelpersonalizados • E-mail: impelpersonalizados@gmail.com
+    </div>
+  </div>
+</div>
