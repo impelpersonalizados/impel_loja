@@ -107,6 +107,9 @@ function readForm(cfg){
   cfg.header.align = $("logoAlign").value;
   cfg.header.bg = $("topBg").value;
   cfg.header.logoUrl = $("logoUrl").value.trim();
+  cfg.product = cfg.product || {};
+  cfg.product.fileKey = "produtos/produto.zip";
+  cfg.product.filename = "produto.zip";
 
   return cfg;
 }
