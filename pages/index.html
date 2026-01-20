@@ -5,13 +5,11 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Produto</title>
 
-  <!-- CSS antigo -->
   <link rel="stylesheet" href="../assets/css/base.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
 
   <style>
-    /* Topo com logo (sem barra de busca) */
     .top-logo{
       width: 100%;
       display:flex;
@@ -27,7 +25,6 @@
     .top-logo .ph{ font-weight:900; color: var(--muted); }
     .top-logo.is-purple .ph{ color:#fff; }
 
-    /* Descrição real embaixo */
     .desc-bottom{
       margin-top: 18px;
       padding: 16px;
@@ -44,7 +41,6 @@
       white-space: pre-line;
     }
 
-    /* mensagens de estado */
     .state{
       margin-top: 14px;
       padding: 14px;
@@ -54,10 +50,41 @@
       color:#2b1d43;
       font-weight: 800;
     }
-    .state small{ display:block; color: var(--muted); font-weight: 600; margin-top:6px; }
+    .state small{
+      display:block;
+      color: var(--muted);
+      font-weight: 600;
+      margin-top:6px;
+    }
+
+    /* Campo de e-mail bem alinhado ao layout */
+    .email-field{
+      margin-top: 12px;
+      display:block;
+    }
+    .email-field label{
+      display:block;
+      font-weight: 900;
+      margin-bottom: 6px;
+      color:#2b1d43;
+    }
+    .email-field input{
+      width:100%;
+      padding:12px;
+      border:1px solid var(--border);
+      border-radius: 12px;
+      outline:none;
+      background:#fff;
+    }
+    .email-field .help{
+      display:block;
+      margin-top:6px;
+      color: var(--muted);
+      font-size: .92rem;
+      line-height:1.4;
+    }
   </style>
 
-  <!-- footer via component -->
   <script type="module">
     import { loadPartials } from "../assets/js/api.js";
     window.addEventListener("DOMContentLoaded", () => loadPartials());
@@ -65,7 +92,6 @@
 </head>
 
 <body>
-  <!-- Topo só com logo -->
   <header id="topLogo" class="top-logo is-center">
     <span id="logoPlaceholder" class="ph">Logo</span>
     <img id="logoImg" alt="Logo" style="display:none;">
@@ -73,7 +99,7 @@
 
   <main class="container">
     <section class="product" id="productWrap">
-      <!-- GALERIA (esquerda) -->
+      <!-- GALERIA -->
       <div class="gallery">
         <div class="thumbs" id="thumbs"></div>
 
@@ -82,54 +108,46 @@
         </div>
       </div>
 
-      <!-- INFOS (direita) -->
+      <!-- INFOS -->
       <div class="product-info">
         <h1 id="productTitle">Carregando...</h1>
         <div class="code" id="productCode"></div>
 
-        <!-- Informações importantes -->
         <div class="notice">
           <strong>Informações importantes</strong>
           <ul class="small" id="importantList"></ul>
         </div>
 
-        <!-- Opções (chips) -->
         <div id="optionsArea"></div>
 
-        <!-- Preço -->
         <div class="price-box">
           <div class="price-main" id="pixPriceLine">—</div>
           <div class="price-sub small" id="cardPriceLine"></div>
 
           <div id="paymentBadges" style="margin-top:10px;"></div>
 
-          <label class="field" style="margin-top:12px;">
-            <span style="display:block; font-weight:900; margin-bottom:6px; color:#2b1d43;">
-              Seu e-mail (obrigatório)
-            </span>
-            <input id="buyerEmail" type="email" placeholder="voce@exemplo.com" required />
-            <span class="muted small" style="display:block; margin-top:6px;">
-              Vamos enviar o link de download nesse e-mail após o pagamento.
-            </span>
-          </label>
+          <!-- ✅ E-mail obrigatório -->
+          <div class="email-field">
+            <label for="buyerEmail">Seu e-mail (obrigatório)</label>
+            <input id="buyerEmail" type="email" placeholder="voce@exemplo.com" autocomplete="email" />
+            <span class="help">Vamos enviar o link de download nesse e-mail após o pagamento.</span>
+          </div>
 
           <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
             <button id="buyNowBtn" class="btn btn--primary">Comprar agora</button>
           </div>
-
+        </div>
 
         <div id="stateBox"></div>
       </div>
     </section>
 
-    <!-- Descrição real (embaixo de tudo) -->
     <section class="desc-bottom">
       <h2>Descrição</h2>
       <p id="descText">(Sem descrição)</p>
     </section>
   </main>
 
-  <!-- Rodapé -->
   <div data-include="../components/footer.html"></div>
 
   <script type="module">
@@ -305,32 +323,36 @@
       document.getElementById("descText").textContent =
         (cfg.descriptionText && cfg.descriptionText.trim()) ? cfg.descriptionText.trim() : "(Sem descrição)";
 
-      // Logo topo
       applyTopLogo(cfg);
-
-      // Galeria
       renderGallery(cfg);
-
-      // Opções
       renderOptions(cfg);
     }
 
     async function comprarAgora(){
-      // cria checkout MP e redireciona
       const btn = document.getElementById("buyNowBtn");
+      const emailEl = document.getElementById("buyerEmail");
+      const email = (emailEl.value || "").trim();
+
+      if (!email || !email.includes("@")) {
+        alert("Digite um e-mail válido para receber o link de download.");
+        emailEl.focus();
+        return;
+      }
+
       btn.disabled = true;
       btn.textContent = "Abrindo pagamento...";
 
       try {
         const res = await fetch(CONFIG.BASE_API_URL + "/api/create_preference", {
           method: "POST",
-          headers: { "Content-Type": "application/json" }
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ buyer_email: email })
         });
 
         const data = await res.json().catch(()=> ({}));
 
         if (!res.ok || !data.init_point) {
-          alert("Erro ao iniciar pagamento. Verifique o Worker/Mercado Pago.");
+          alert("Erro ao iniciar pagamento. Verifique Worker/Mercado Pago.");
           btn.disabled = false;
           btn.textContent = "Comprar agora";
           return;
@@ -349,6 +371,7 @@
 
       if (cfg && cfg.__error) {
         setState("Erro ao carregar", cfg.__error);
+        document.getElementById("productTitle").textContent = "Produto";
         return;
       }
 
@@ -360,10 +383,8 @@
 
       render(cfg);
 
-      // ligar botão comprar
       document.getElementById("buyNowBtn").addEventListener("click", comprarAgora);
     })();
   </script>
 </body>
 </html>
-
