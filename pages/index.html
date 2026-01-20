@@ -103,10 +103,20 @@
 
           <div id="paymentBadges" style="margin-top:10px;"></div>
 
+          <label class="field" style="margin-top:12px;">
+            <span style="display:block; font-weight:900; margin-bottom:6px; color:#2b1d43;">
+              Seu e-mail (obrigatório)
+            </span>
+            <input id="buyerEmail" type="email" placeholder="voce@exemplo.com" required />
+            <span class="muted small" style="display:block; margin-top:6px;">
+              Vamos enviar o link de download nesse e-mail após o pagamento.
+            </span>
+          </label>
+
           <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
             <button id="buyNowBtn" class="btn btn--primary">Comprar agora</button>
           </div>
-        </div>
+
 
         <div id="stateBox"></div>
       </div>
@@ -356,3 +366,4 @@
   </script>
 </body>
 </html>
+
