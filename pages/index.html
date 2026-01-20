@@ -72,13 +72,10 @@
   </header>
 
   <main class="container">
-    <!-- Conteúdo principal -->
     <section class="product" id="productWrap">
       <!-- GALERIA (esquerda) -->
       <div class="gallery">
-        <div class="thumbs" id="thumbs">
-          <!-- preenchido via JS -->
-        </div>
+        <div class="thumbs" id="thumbs"></div>
 
         <div class="main-image">
           <img id="mainImg" src="../assets/img/hero.png" alt="Imagem principal">
@@ -90,7 +87,7 @@
         <h1 id="productTitle">Carregando...</h1>
         <div class="code" id="productCode"></div>
 
-        <!-- Onde era "descrição" agora vira Informações importantes -->
+        <!-- Informações importantes -->
         <div class="notice">
           <strong>Informações importantes</strong>
           <ul class="small" id="importantList"></ul>
@@ -138,8 +135,7 @@
       try {
         const res = await fetch(CONFIG.BASE_API_URL + "/api/config", { cache: "no-store" });
         if (!res.ok) return { __error: `Erro ${res.status} ao buscar config` };
-        const data = await res.json();
-        return data; // pode ser null
+        return await res.json(); // pode ser null
       } catch {
         return { __error: "Falha de rede/CORS ao buscar config" };
       }
@@ -228,16 +224,12 @@
       const imgs = Array.isArray(cfg.images) ? cfg.images.filter(Boolean) : [];
 
       if (!imgs.length) {
-        // fallback
         mainImg.src = "../assets/img/hero.png";
-        thumbs.innerHTML = `
-          <button class="thumb" data-src="../assets/img/hero.png" aria-label="Imagem 1">
-            <img src="../assets/img/hero.png" alt="thumb 1">
-          </button>
-        `;
-        thumbs.querySelector(".thumb")?.addEventListener("click", () => {
-          mainImg.src = "../assets/img/hero.png";
-        });
+        const btn = document.createElement("button");
+        btn.className = "thumb";
+        btn.innerHTML = `<img src="../assets/img/hero.png" alt="thumb">`;
+        btn.addEventListener("click", () => { mainImg.src = "../assets/img/hero.png"; });
+        thumbs.appendChild(btn);
         return;
       }
 
@@ -249,14 +241,14 @@
         btn.setAttribute("data-src", src);
         btn.setAttribute("aria-label", `Imagem ${i+1}`);
         btn.innerHTML = `<img src="${src}" alt="thumb ${i+1}">`;
-        btn.addEventListener("click", () => {
-          mainImg.src = src;
-        });
+        btn.addEventListener("click", () => { mainImg.src = src; });
         thumbs.appendChild(btn);
       });
     }
 
     function render(cfg){
+      document.title = cfg.title || "Produto";
+
       document.getElementById("productTitle").textContent = cfg.title || "Produto";
       document.getElementById("productCode").textContent = cfg.code ? `(Cód: ${cfg.code})` : "";
 
@@ -311,11 +303,35 @@
 
       // Opções
       renderOptions(cfg);
+    }
 
-      // Botão comprar (ainda sem MP)
-      document.getElementById("buyNowBtn").onclick = () => {
-        alert("Próximo passo: integrar Mercado Pago.");
-      };
+    async function comprarAgora(){
+      // cria checkout MP e redireciona
+      const btn = document.getElementById("buyNowBtn");
+      btn.disabled = true;
+      btn.textContent = "Abrindo pagamento...";
+
+      try {
+        const res = await fetch(CONFIG.BASE_API_URL + "/api/create_preference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" }
+        });
+
+        const data = await res.json().catch(()=> ({}));
+
+        if (!res.ok || !data.init_point) {
+          alert("Erro ao iniciar pagamento. Verifique o Worker/Mercado Pago.");
+          btn.disabled = false;
+          btn.textContent = "Comprar agora";
+          return;
+        }
+
+        window.location.href = data.init_point;
+      } catch {
+        alert("Falha de rede ao iniciar pagamento.");
+        btn.disabled = false;
+        btn.textContent = "Comprar agora";
+      }
     }
 
     (async () => {
@@ -333,6 +349,9 @@
       }
 
       render(cfg);
+
+      // ligar botão comprar
+      document.getElementById("buyNowBtn").addEventListener("click", comprarAgora);
     })();
   </script>
 </body>
