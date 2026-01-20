@@ -3,61 +3,148 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pagamento aprovado</title>
+  <title>Pagamento confirmado</title>
+
   <link rel="stylesheet" href="../assets/css/base.css" />
-  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/csslayout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <script type="module">
-    import { loadPartials } from "../assets/js/api.js";
-    window.addEventListener("DOMContentLoaded", () => loadPartials());
-  </script>
+
+  <style>
+    .wrap{
+      max-width: 560px;
+      margin: 40px auto;
+      padding: 24px;
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      box-shadow: var(--shadow);
+      text-align: center;
+    }
+    h1{ color:#2b1d43; }
+    .muted{ color: var(--muted); }
+    .ok{
+      margin-top: 16px;
+      padding: 14px;
+      background: #f0fff6;
+      border: 1px solid #b7efd2;
+      border-radius: 12px;
+      color: #136f3c;
+      font-weight: 800;
+    }
+    .wait{
+      margin-top: 16px;
+      padding: 14px;
+      background: #fff9ec;
+      border: 1px solid #ffe1a3;
+      border-radius: 12px;
+      color: #8a5b00;
+      font-weight: 800;
+    }
+    .err{
+      margin-top: 16px;
+      padding: 14px;
+      background: #fff1f1;
+      border: 1px solid #ffc9c9;
+      border-radius: 12px;
+      color: #8a1c1c;
+      font-weight: 800;
+    }
+    .actions{
+      margin-top: 18px;
+      display:flex;
+      gap:10px;
+      justify-content:center;
+      flex-wrap:wrap;
+    }
+  </style>
 </head>
+
 <body>
   <main class="container">
-    <div class="card">
-      <h1>✅ Obrigado!</h1>
-      <p class="muted">Estamos verificando seu pagamento para liberar o download.</p>
+    <div class="wrap">
+      <h1>Pagamento</h1>
 
-      <p><b>payment_id:</b> <span id="pid">—</span></p>
+      <p class="muted" id="statusText">
+        Estamos confirmando seu pagamento...
+      </p>
 
-      <button id="checkBtn" class="btn btn--primary">Verificar liberação</button>
-      <p id="msg" class="muted" style="margin-top:10px;"></p>
+      <div id="resultBox"></div>
+
+      <div class="actions" id="actions" style="display:none;">
+        <a id="downloadBtn" class="btn btn--primary" href="#">Baixar arquivo</a>
+      </div>
     </div>
   </main>
-
-  <div data-include="../components/footer.html"></div>
 
   <script type="module">
     import { CONFIG } from "../assets/js/config.js";
 
-    const url = new URL(window.location.href);
-    const paymentId = url.searchParams.get("payment_id") || url.searchParams.get("paymentId");
+    const params = new URLSearchParams(window.location.search);
+    const paymentId =
+      params.get("payment_id") ||
+      params.get("collection_id") ||
+      params.get("paymentId");
 
-    document.getElementById("pid").textContent = paymentId || "(não veio na URL)";
+    const statusText = document.getElementById("statusText");
+    const resultBox = document.getElementById("resultBox");
+    const actions = document.getElementById("actions");
+    const downloadBtn = document.getElementById("downloadBtn");
 
-    document.getElementById("checkBtn").addEventListener("click", async () => {
-      const msg = document.getElementById("msg");
-      if (!paymentId) {
-        msg.textContent = "payment_id não veio na URL. Volte e tente novamente.";
-        return;
+    if (!paymentId) {
+      statusText.textContent = "Pagamento não identificado.";
+      resultBox.innerHTML = `<div class="err">Não foi possível identificar o pagamento.</div>`;
+    } else {
+      checkPayment();
+    }
+
+    async function checkPayment(){
+      try {
+        const res = await fetch(
+          CONFIG.BASE_API_URL + "/api/check?payment_id=" + encodeURIComponent(paymentId),
+          { cache: "no-store" }
+        );
+
+        const data = await res.json().catch(()=> ({}));
+
+        if (!res.ok) {
+          throw new Error("Erro ao verificar pagamento");
+        }
+
+        if (!data.approved) {
+          statusText.textContent = "Pagamento ainda não confirmado.";
+          resultBox.innerHTML = `
+            <div class="wait">
+              Seu pagamento está sendo processado.<br>
+              Se você acabou de pagar, aguarde alguns instantes e atualize esta página.
+            </div>
+          `;
+          return;
+        }
+
+        // APROVADO
+        statusText.textContent = "Pagamento confirmado!";
+        resultBox.innerHTML = `
+          <div class="ok">
+            Seu pagamento foi aprovado com sucesso 🎉<br>
+            Clique abaixo para baixar seu arquivo.
+          </div>
+        `;
+
+        downloadBtn.href =
+          CONFIG.BASE_API_URL + "/api/download?token=" + encodeURIComponent(data.token);
+
+        actions.style.display = "flex";
+
+      } catch (e) {
+        statusText.textContent = "Erro ao verificar pagamento.";
+        resultBox.innerHTML = `
+          <div class="err">
+            Ocorreu um erro ao confirmar seu pagamento.<br>
+            Tente atualizar a página.
+          </div>
+        `;
       }
-
-      msg.textContent = "Consultando liberação...";
-      const res = await fetch(`${CONFIG.BASE_API_URL}/api/check?payment_id=${encodeURIComponent(paymentId)}`, { cache:"no-store" });
-
-      if (!res.ok) {
-        msg.textContent = "Erro ao consultar. Tente novamente.";
-        return;
-      }
-
-      const data = await res.json();
-      if (data.approved && data.token) {
-        msg.textContent = "Aprovado! Redirecionando...";
-        window.location.href = `./download.html?token=${encodeURIComponent(data.token)}`;
-      } else {
-        msg.textContent = "Ainda não liberado. Aguarde e tente novamente.";
-      }
-    });
+    }
   </script>
 </body>
 </html>
