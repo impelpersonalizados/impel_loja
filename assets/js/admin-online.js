@@ -111,6 +111,11 @@ function readForm(cfg){
   cfg.product.fileKey = "produtos/produto.zip";
   cfg.product.filename = "produto.zip";
 
+  // ✅ Arquivo do produto no R2 (OBRIGATÓRIO para /api/download funcionar)
+cfg.product = cfg.product || {};
+cfg.product.fileKey = "produtos/produto.zip"; // <-- troque se seu arquivo tiver outro nome
+cfg.product.filename = "produto.zip";         // <-- nome que o cliente vai baixar
+
   return cfg;
 }
 
