@@ -19,11 +19,6 @@
       border-radius: var(--radius);
       box-shadow: var(--shadow);
       text-align: center;
-
-      <div id="expiryBox" class="expiry" style="display:none;">
-        ⏳ Seu link de download é válido por <strong id="timeLeft">--:--:--</strong>
-      </div>
-
     }
     h1{ color:#2b1d43; margin-top:0; }
     .muted{ color: var(--muted); }
@@ -78,9 +73,25 @@
       text-align:left;
       font-size: .92rem;
     }
+
+    /* ✅ Contador 48h */
+    .expiry{
+      margin-top: 14px;
+      padding: 12px;
+      border-radius: 12px;
+      background: #f7f4ff;
+      border: 1px solid #e5dcff;
+      color: #2b1d43;
+      font-weight: 800;
+    }
+    .expiry.expired{
+      background:#fff1f1;
+      border-color:#ffc9c9;
+      color:#8a1c1c;
+    }
   </style>
 
-  <!-- EmailJS SDK -->
+  <!-- EmailJS -->
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 
@@ -98,6 +109,11 @@
         <a class="btn" href="./index.html">Voltar à loja</a>
       </div>
 
+      <!-- ✅ contador -->
+      <div id="expiryBox" class="expiry" style="display:none;">
+        ⏳ Seu link de download é válido por <strong id="timeLeft">--:--:--</strong>
+      </div>
+
       <p class="muted" id="emailStatus" style="margin-top:12px;"></p>
       <div id="emailLinkBox" style="display:none;" class="miniBox"></div>
     </div>
@@ -106,19 +122,16 @@
   <script type="module">
     import { CONFIG } from "../assets/js/config.js";
 
-    // ✅ Seus dados do EmailJS (já preenchidos)
+    // ✅ Seus dados EmailJS
     const EMAILJS_PUBLIC_KEY = "sRXnalzuf_HXsC7ZL";
     const EMAILJS_SERVICE_ID = "service_gvkmeok";
     const EMAILJS_TEMPLATE_ID = "template_ivsy6h7";
 
-    // Inicializa EmailJS
     if (window.emailjs) {
       emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
     }
 
     const params = new URLSearchParams(window.location.search);
-
-    // Mercado Pago pode voltar com payment_id ou collection_id (varia)
     const paymentId =
       params.get("payment_id") ||
       params.get("collection_id") ||
@@ -131,8 +144,39 @@
     const emailStatus = document.getElementById("emailStatus");
     const emailLinkBox = document.getElementById("emailLinkBox");
 
+    // ✅ Contador 48h
+    function startCountdown(expiresAt){
+      const box = document.getElementById("expiryBox");
+      const out = document.getElementById("timeLeft");
+      if (!box || !out) return;
+
+      box.style.display = "block";
+
+      function tick(){
+        const diff = expiresAt - Date.now();
+
+        if (diff <= 0){
+          out.textContent = "EXPIRADO";
+          box.classList.add("expired");
+          return;
+        }
+
+        const totalSeconds = Math.floor(diff / 1000);
+        const h = Math.floor(totalSeconds / 3600);
+        const m = Math.floor((totalSeconds % 3600) / 60);
+        const s = totalSeconds % 60;
+
+        out.textContent =
+          String(h).padStart(2,"0") + ":" +
+          String(m).padStart(2,"0") + ":" +
+          String(s).padStart(2,"0");
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    }
+
     function getDownloadPageUrl(token){
-      // Link para a página do seu site (mais amigável)
       const baseSite = "https://impelpersonalizados.github.io/impel_loja/pages";
       return `${baseSite}/download.html?token=${encodeURIComponent(token)}`;
     }
@@ -190,26 +234,30 @@
           </div>
         `;
 
-        // Botão de download direto (Worker) – mais seguro
+        // Botão download direto (Worker)
         downloadBtn.href =
           CONFIG.BASE_API_URL + "/api/download?token=" + encodeURIComponent(data.token);
 
         actions.style.display = "flex";
 
+        // ✅ Inicia contador usando expires_at
+        if (typeof data.expires_at === "number") {
+          startCountdown(data.expires_at);
+        }
+
         const buyerEmail = (data.buyer_email || "").trim();
         const productTitle = "Arquivo Digital – Caixa Cofre Desafio R$ 5.000";
+
+        // Mostra link também na tela
+        const pageLink = getDownloadPageUrl(data.token);
+        emailLinkBox.style.display = "block";
+        emailLinkBox.textContent = "Link do download (guarde): " + pageLink;
 
         if (!buyerEmail) {
           emailStatus.textContent = "Não conseguimos identificar seu e-mail. Use o botão de download acima.";
           return;
         }
 
-        // Mostrar o link também na tela (pra caso e-mail bloqueie)
-        const pageLink = getDownloadPageUrl(data.token);
-        emailLinkBox.style.display = "block";
-        emailLinkBox.textContent = "Link do download (guarde): " + pageLink;
-
-        // Evita enviar várias vezes ao recarregar
         if (alreadySent(paymentId)) {
           emailStatus.textContent = `✅ Link já enviado para: ${buyerEmail}`;
           return;
@@ -246,4 +294,3 @@
   </script>
 </body>
 </html>
-
