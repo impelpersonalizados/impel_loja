@@ -285,7 +285,7 @@
 
       const pix = cfg.pixPrice || "";
       document.getElementById("pixPriceLine").innerHTML =
-        `R$ ${esc(pix)} <span class="small" style="font-weight:700;color:var(--muted)">no pix</span>`;
+        `R$ ${esc(pix)} <span class="small" style="font-weight:700;color:var(--muted)"></span>`;
 
       const cardLine = document.getElementById("cardPriceLine");
       if (cfg.cardPrice && cfg.installments && cfg.installmentValue) {
@@ -403,5 +403,6 @@
   </script>
 </body>
 </html>
+
 
 
