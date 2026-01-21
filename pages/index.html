@@ -339,6 +339,13 @@
     }
 
     async function comprarAgora(){
+
+      fetch(CONFIG.BASE_API_URL + "/api/track", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "checkout_click" })
+      }).catch(()=>{});
+
       const btn = document.getElementById("buyNowBtn");
       const emailEl = document.getElementById("buyerEmail");
       const email = (emailEl.value || "").trim();
@@ -385,6 +392,13 @@
             gtag('event', 'checkout_redirect', { method: 'mercadopago' });
           } catch {}
         }
+        
+        fetch(CONFIG.BASE_API_URL + "/api/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event: "checkout_redirect" })
+        }).catch(()=>{});
+
 
         window.location.href = data.init_point;
       } catch {
@@ -412,7 +426,15 @@
       render(cfg);
       document.getElementById("buyNowBtn").addEventListener("click", comprarAgora);
     })();
+
+    fetch(CONFIG.BASE_API_URL + "/api/track", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ event: "page_view" })
+    }).catch(()=>{});
+
   </script>
 </body>
 </html>
+
 
