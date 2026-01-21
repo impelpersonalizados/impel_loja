@@ -245,22 +245,31 @@
           startCountdown(data.expires_at);
         }
 
-        const buyerEmail = (data.buyer_email || "").trim();
+        // 🔹 E-mail do comprador vindo do backend
+        let buyerEmail = String(data.buyer_email || "").trim().toLowerCase();
+
+        // 🔹 Limpa qualquer espaço estranho
+        buyerEmail = buyerEmail.replace(/\s+/g, "");
+
         const productTitle = "Arquivo Digital – Caixa Cofre Desafio R$ 5.000";
 
-        // Mostra link também na tela
+        // 🔹 Mostra link também na tela
         const pageLink = getDownloadPageUrl(data.token);
         emailLinkBox.style.display = "block";
         emailLinkBox.textContent = "Link do download (guarde): " + pageLink;
 
-        if (!buyerEmail) {
-          emailStatus.textContent = "Não conseguimos identificar seu e-mail. Use o botão de download acima.";
-          return;
+        // 🔹 Validação mínima do e-mail (EVITA ERRO 422)
+        if (!buyerEmail || !buyerEmail.includes("@") || !buyerEmail.includes(".")) {
+          console.warn("E-mail inválido recebido:", data.buyer_email);
+          emailStatus.textContent =
+          "⚠️ Não conseguimos enviar o e-mail (endereço inválido). Use o botão de download acima.";
+        return;
         }
 
+        // 🔹 Evita reenvio duplicado
         if (alreadySent(paymentId)) {
           emailStatus.textContent = `✅ Link já enviado para: ${buyerEmail}`;
-          return;
+        return;
         }
 
         emailStatus.textContent = "Enviando e-mail com o link de download...";
@@ -270,9 +279,11 @@
           markSent(paymentId);
           emailStatus.textContent = `✅ Link enviado para: ${buyerEmail}`;
         } catch (err) {
-          console.error("EmailJS erro:", err);
-          emailStatus.textContent = "⚠️ Não foi possível enviar o e-mail agora. Use o botão de download acima.";
+          console.error("EmailJS erro COMPLETO:", err);
+          emailStatus.textContent =
+          "⚠️ Não foi possível enviar o e-mail agora. Use o botão de download acima.";
         }
+
 
       } catch (e) {
         statusText.textContent = "Erro ao verificar pagamento.";
@@ -294,3 +305,4 @@
   </script>
 </body>
 </html>
+
