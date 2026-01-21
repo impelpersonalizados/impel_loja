@@ -44,7 +44,7 @@
       <div class="spinner"></div>
 
       <p class="muted">
-        Assim que for aprovado, o download será liberado automaticamente.
+        Assim que for aprovado, você será redirecionado automaticamente.
       </p>
 
       <div class="timer" id="timer">Verificando em 5s…</div>
@@ -65,6 +65,8 @@
     import { CONFIG } from "../assets/js/config.js";
 
     const url = new URL(window.location.href);
+
+    // MP pode enviar payment_id ou collection_id
     const paymentId =
       url.searchParams.get("payment_id") ||
       url.searchParams.get("collection_id");
@@ -79,11 +81,15 @@
     }
 
     let countdown = 5;
-    let interval = null;
     let checking = false;
 
     function updateTimer(){
       timerEl.textContent = `Verificando em ${countdown}s…`;
+    }
+
+    function goSuccess(){
+      // Redireciona para success.html com payment_id
+      window.location.href = `./success.html?payment_id=${encodeURIComponent(paymentId)}`;
     }
 
     async function checkStatus(){
@@ -97,16 +103,15 @@
         );
 
         if (!res.ok) throw new Error("Erro na consulta");
-
         const data = await res.json();
 
-        if (data.approved && data.token) {
-          window.location.href =
-            `./download.html?token=${encodeURIComponent(data.token)}`;
+        // ✅ Se aprovado, vai para success.html
+        if (data.approved) {
+          goSuccess();
           return;
         }
 
-        msg.textContent = "Pagamento ainda não confirmado. Continuando a verificação…";
+        msg.textContent = "Ainda não confirmado. Continuando a verificação…";
       } catch (e) {
         msg.textContent = "Erro ao consultar. Tentaremos novamente.";
       } finally {
@@ -120,7 +125,7 @@
     btn.addEventListener("click", checkStatus);
 
     // Auto-check a cada 5s
-    interval = setInterval(() => {
+    setInterval(() => {
       countdown--;
       if (countdown <= 0) {
         checkStatus();
