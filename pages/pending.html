@@ -3,23 +3,133 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Pagamento pendente</title>
+  <title>Processando pagamento</title>
+
   <link rel="stylesheet" href="../assets/css/base.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
-  <script type="module">
-    import { loadPartials } from "../assets/js/api.js";
-    window.addEventListener("DOMContentLoaded", () => loadPartials());
-  </script>
+
+  <style>
+    .center-box{
+      max-width: 640px;
+      margin: 60px auto;
+      text-align: center;
+    }
+    .spinner{
+      width: 46px;
+      height: 46px;
+      border: 4px solid #ddd;
+      border-top-color: #B389FD;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 18px auto;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .timer{
+      margin-top: 10px;
+      font-size: 13px;
+      color: var(--muted);
+    }
+  </style>
 </head>
+
 <body>
   <main class="container">
-    <div class="card">
-      <h1>⏳ Pagamento pendente</h1>
-      <p class="muted">Seu pagamento ainda não foi confirmado.</p>
-      <a class="btn btn--primary" href="./index.html">Voltar</a>
+    <div class="card center-box">
+      <h1>⏳ Processando pagamento</h1>
+      <p class="muted">
+        Seu pagamento foi recebido e está sendo confirmado pelo Mercado Pago.
+      </p>
+
+      <div class="spinner"></div>
+
+      <p class="muted">
+        Assim que for aprovado, o download será liberado automaticamente.
+      </p>
+
+      <div class="timer" id="timer">Verificando em 5s…</div>
+
+      <button id="checkBtn" class="btn btn--primary" style="margin-top:16px;">
+        Verificar agora
+      </button>
+
+      <p id="msg" class="muted" style="margin-top:12px;"></p>
+
+      <p class="muted" style="margin-top:18px;">
+        ⏱️ O link de download ficará disponível por <b>48 horas</b>.
+      </p>
     </div>
   </main>
-  <div data-include="../components/footer.html"></div>
+
+  <script type="module">
+    import { CONFIG } from "../assets/js/config.js";
+
+    const url = new URL(window.location.href);
+    const paymentId =
+      url.searchParams.get("payment_id") ||
+      url.searchParams.get("collection_id");
+
+    const msg = document.getElementById("msg");
+    const timerEl = document.getElementById("timer");
+    const btn = document.getElementById("checkBtn");
+
+    if (!paymentId) {
+      msg.textContent = "Não foi possível identificar o pagamento.";
+      btn.disabled = true;
+    }
+
+    let countdown = 5;
+    let interval = null;
+    let checking = false;
+
+    function updateTimer(){
+      timerEl.textContent = `Verificando em ${countdown}s…`;
+    }
+
+    async function checkStatus(){
+      if (checking || !paymentId) return;
+      checking = true;
+
+      try {
+        const res = await fetch(
+          `${CONFIG.BASE_API_URL}/api/check?payment_id=${encodeURIComponent(paymentId)}`,
+          { cache: "no-store" }
+        );
+
+        if (!res.ok) throw new Error("Erro na consulta");
+
+        const data = await res.json();
+
+        if (data.approved && data.token) {
+          window.location.href =
+            `./download.html?token=${encodeURIComponent(data.token)}`;
+          return;
+        }
+
+        msg.textContent = "Pagamento ainda não confirmado. Continuando a verificação…";
+      } catch (e) {
+        msg.textContent = "Erro ao consultar. Tentaremos novamente.";
+      } finally {
+        checking = false;
+        countdown = 5;
+        updateTimer();
+      }
+    }
+
+    // Botão manual
+    btn.addEventListener("click", checkStatus);
+
+    // Auto-check a cada 5s
+    interval = setInterval(() => {
+      countdown--;
+      if (countdown <= 0) {
+        checkStatus();
+      } else {
+        updateTimer();
+      }
+    }, 1000);
+
+    updateTimer();
+  </script>
 </body>
 </html>
