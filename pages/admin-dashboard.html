@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Dashboard - Impel</title>
+
+  <link rel="stylesheet" href="../assets/css/base.css" />
+  <link rel="stylesheet" href="../assets/css/layout.css" />
+  <link rel="stylesheet" href="../assets/css/components.css" />
+
+  <style>
+    .wrap{ max-width: 1100px; margin: 22px auto; }
+    .row{ display:flex; gap: 12px; flex-wrap: wrap; }
+    .card2{ background:#fff; border:1px solid var(--border); border-radius: var(--radius); box-shadow: var(--shadow); padding: 14px; }
+    .kpi{ flex: 1 1 220px; }
+    .kpi h3{ margin:0; color:#2b1d43; font-size: 1rem; }
+    .kpi .num{ font-size: 1.6rem; font-weight: 900; margin-top: 6px; }
+    .muted{ color: var(--muted); }
+    input{ padding:12px; border:1px solid var(--border); border-radius: 12px; width: 100%; }
+    table{ width:100%; border-collapse: collapse; }
+    th,td{ padding:10px; border-bottom:1px solid var(--border); text-align:left; font-size:.95rem; }
+    th{ color:#2b1d43; }
+    .topbar{ display:flex; gap:10px; flex-wrap:wrap; align-items:center; justify-content:space-between; }
+    .btnSmall{ padding:10px 12px; border-radius:12px; border:1px solid var(--border); background:#fff; cursor:pointer; font-weight:900; }
+    .btnSmall.primary{ background:#B389FD; border-color:#B389FD; color:#fff; }
+    .pill{ display:inline-block; padding:4px 10px; border-radius:999px; background: #f7f4ff; border:1px solid #e5dcff; font-weight:800; }
+  </style>
+</head>
+
+<body>
+  <main class="container">
+    <div class="wrap">
+      <div class="card2">
+        <div class="topbar">
+          <div>
+            <h2 style="margin:0;">Dashboard Interno</h2>
+            <div class="muted">Funil + Vendas aprovadas (protegido por ADMIN TOKEN)</div>
+          </div>
+
+          <div style="min-width:280px;">
+            <input id="token" type="password" placeholder="Cole seu ADMIN_TOKEN aqui" />
+          </div>
+
+          <div class="row" style="gap:8px;">
+            <button class="btnSmall primary" id="btnLoad">Carregar</button>
+            <button class="btnSmall" id="btnRefresh">Atualizar</button>
+          </div>
+        </div>
+
+        <p id="msg" class="muted" style="margin-top:10px;"></p>
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="card2 kpi"><h3>Visitas (Total)</h3><div class="num" id="kpiViews">—</div><div class="muted">Hoje: <span id="kpiViewsToday">—</span></div></div>
+        <div class="card2 kpi"><h3>Cliques Comprar (Total)</h3><div class="num" id="kpiClicks">—</div><div class="muted">Hoje: <span id="kpiClicksToday">—</span></div></div>
+        <div class="card2 kpi"><h3>Aprovadas (Total)</h3><div class="num" id="kpiApproved">—</div><div class="muted">Hoje: <span id="kpiApprovedToday">—</span></div></div>
+        <div class="card2 kpi"><h3>Downloads (Total)</h3><div class="num" id="kpiDownloads">—</div><div class="muted">Hoje: <span id="kpiDownloadsToday">—</span></div></div>
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="card2" style="flex:1 1 100%;">
+          <h3 style="margin:0 0 10px;">Taxas</h3>
+          <div class="muted">
+            Clique/Visita: <span class="pill" id="rateClick">—</span>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            Aprovado/Clique: <span class="pill" id="rateApprove">—</span>
+            &nbsp;&nbsp;|&nbsp;&nbsp;
+            Download/Aprovado: <span class="pill" id="rateDownload">—</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="row" style="margin-top:14px;">
+        <div class="card2" style="flex:1 1 100%;">
+          <div style="display:flex; justify-content:space-between; gap:10px; align-items:center; flex-wrap:wrap;">
+            <h3 style="margin:0;">Vendas aprovadas (últimas)</h3>
+            <div class="muted">Mostrando até 50</div>
+          </div>
+
+          <div style="margin-top:10px; overflow:auto;">
+            <table>
+              <thead>
+                <tr>
+                  <th>Data</th>
+                  <th>Payment ID</th>
+                  <th>E-mail</th>
+                  <th>Valor</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="salesTbody">
+                <tr><td colspan="5" class="muted">Carregue o dashboard…</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script type="module">
+    import { CONFIG } from "../assets/js/config.js";
+
+    const $ = (id) => document.getElementById(id);
+    const msg = $("msg");
+
+    function fmtPct(x){
+      if (!isFinite(x)) return "—";
+      return (x * 100).toFixed(1) + "%";
+    }
+
+    function fmtDate(ms){
+      try {
+        const d = new Date(ms);
+        return d.toLocaleString("pt-BR");
+      } catch { return "—"; }
+    }
+
+    function fmtMoneyBRL(n){
+      try {
+        return (Number(n) || 0).toLocaleString("pt-BR", { style:"currency", currency:"BRL" });
+      } catch { return "R$ 0,00"; }
+    }
+
+    async function fetchJSON(path, token){
+      const res = await fetch(CONFIG.BASE_API_URL + path, {
+        headers: { "Authorization": "Bearer " + token },
+        cache: "no-store"
+      });
+      const data = await res.json().catch(()=> ({}));
+      return { ok: res.ok, status: res.status, data };
+    }
+
+    function setKPIs(stats){
+      $("kpiViews").textContent = stats.totals.page_view ?? 0;
+      $("kpiViewsToday").textContent = stats.today.page_view ?? 0;
+
+      $("kpiClicks").textContent = stats.totals.checkout_click ?? 0;
+      $("kpiClicksToday").textContent = stats.today.checkout_click ?? 0;
+
+      $("kpiApproved").textContent = stats.totals.purchase_approved ?? 0;
+      $("kpiApprovedToday").textContent = stats.today.purchase_approved ?? 0;
+
+      $("kpiDownloads").textContent = stats.totals.download_started ?? 0;
+      $("kpiDownloadsToday").textContent = stats.today.download_started ?? 0;
+
+      $("rateClick").textContent = fmtPct(stats.conv.click_rate);
+      $("rateApprove").textContent = fmtPct(stats.conv.approval_rate);
+      $("rateDownload").textContent = fmtPct(stats.conv.download_rate);
+    }
+
+    function setSales(sales){
+      const tb = $("salesTbody");
+      tb.innerHTML = "";
+
+      if (!sales.length) {
+        tb.innerHTML = `<tr><td colspan="5" class="muted">Nenhuma venda ainda.</td></tr>`;
+        return;
+      }
+
+      for (const s of sales) {
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${fmtDate(s.created_at || 0)}</td>
+          <td>${s.payment_id || "—"}</td>
+          <td>${s.buyer_email || "—"}</td>
+          <td>${fmtMoneyBRL(s.amount)}</td>
+          <td>${s.status || "—"}</td>
+        `;
+        tb.appendChild(tr);
+      }
+    }
+
+    async function loadAll(){
+      const token = $("token").value.trim();
+      if (!token) {
+        msg.textContent = "Cole o ADMIN_TOKEN para carregar.";
+        return;
+      }
+
+      msg.textContent = "Carregando…";
+
+      const statsRes = await fetchJSON("/api/admin/stats", token);
+      if (!statsRes.ok) {
+        msg.textContent = "Erro ao carregar stats (token errado?). HTTP " + statsRes.status;
+        return;
+      }
+
+      const salesRes = await fetchJSON("/api/admin/sales?limit=50", token);
+      if (!salesRes.ok) {
+        msg.textContent = "Erro ao carregar vendas. HTTP " + salesRes.status;
+        return;
+      }
+
+      setKPIs(statsRes.data);
+      setSales(salesRes.data.sales || []);
+
+      msg.textContent = "Atualizado ✅ (" + (statsRes.data.day || "") + ")";
+    }
+
+    $("btnLoad").addEventListener("click", loadAll);
+    $("btnRefresh").addEventListener("click", loadAll);
+  </script>
+</body>
+</html>
