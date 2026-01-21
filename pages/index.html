@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Produto</title>
 
-  <!-- Google Analytics GA4 -->
+  <!-- ✅ Google Analytics GA4 (troque G-NKZTYFWTH4 pelo seu Measurement ID) -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-NKZTYFWTH4"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -18,6 +18,54 @@
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
 
+  <style>
+    /* Topo com logo (sem barra de busca) */
+    .top-logo{
+      width: 100%;
+      display:flex;
+      align-items:center;
+      padding: 16px 12px;
+      border-bottom: 1px solid var(--border);
+      background: #fff;
+    }
+    .top-logo.is-center{ justify-content:center; }
+    .top-logo.is-left{ justify-content:flex-start; padding-left:24px; }
+    .top-logo.is-purple{ background:#B389FD; border-bottom-color: rgba(0,0,0,.06); }
+    .top-logo img{ max-height: 54px; width:auto; display:block; }
+    .top-logo .ph{ font-weight:900; color: var(--muted); }
+    .top-logo.is-purple .ph{ color:#fff; }
+
+    /* Descrição real embaixo */
+    .desc-bottom{
+      margin-top: 18px;
+      padding: 16px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: #fff;
+      box-shadow: var(--shadow);
+    }
+    .desc-bottom h2{ margin:0 0 10px; color:#2b1d43; }
+    .desc-bottom p{
+      margin:0;
+      color: var(--muted);
+      line-height: 1.6;
+      white-space: pre-line;
+    }
+
+    /* mensagens de estado */
+    .state{
+      margin-top: 14px;
+      padding: 14px;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      background: var(--surface-2);
+      color:#2b1d43;
+      font-weight: 800;
+    }
+    .state small{ display:block; color: var(--muted); font-weight: 600; margin-top:6px; }
+  </style>
+
+  <!-- footer via component -->
   <script type="module">
     import { loadPartials } from "../assets/js/api.js";
     window.addEventListener("DOMContentLoaded", () => loadPartials());
@@ -25,6 +73,7 @@
 </head>
 
 <body>
+  <!-- Topo só com logo -->
   <header id="topLogo" class="top-logo is-center">
     <span id="logoPlaceholder" class="ph">Logo</span>
     <img id="logoImg" alt="Logo" style="display:none;">
@@ -32,48 +81,58 @@
 
   <main class="container">
     <section class="product" id="productWrap">
-
+      <!-- GALERIA (esquerda) -->
       <div class="gallery">
         <div class="thumbs" id="thumbs"></div>
+
         <div class="main-image">
           <img id="mainImg" src="../assets/img/hero.png" alt="Imagem principal">
         </div>
       </div>
 
+      <!-- INFOS (direita) -->
       <div class="product-info">
-        <h1 id="productTitle">Carregando…</h1>
+        <h1 id="productTitle">Carregando...</h1>
         <div class="code" id="productCode"></div>
 
+        <!-- Informações importantes -->
         <div class="notice">
           <strong>Informações importantes</strong>
           <ul class="small" id="importantList"></ul>
         </div>
 
+        <!-- Opções (chips) -->
         <div id="optionsArea"></div>
 
+        <!-- Preço -->
         <div class="price-box">
           <div class="price-main" id="pixPriceLine">—</div>
           <div class="price-sub small" id="cardPriceLine"></div>
 
           <div id="paymentBadges" style="margin-top:10px;"></div>
 
-          <p class="small muted" style="margin-top:10px;">
+          <!-- ✅ Mensagem sem campo e-mail -->
+          <p class="microcopy" style="margin-top:10px;">
             Após o pagamento, o link de download será enviado para o e-mail informado no Mercado Pago.
           </p>
 
-          <button id="buyNowBtn" class="btn btn--primary" style="margin-top:14px;">
-            Comprar agora
-          </button>
+          <div style="display:flex; gap:10px; margin-top:14px; flex-wrap:wrap;">
+            <button id="buyNowBtn" class="btn btn--primary">Comprar agora</button>
+          </div>
         </div>
+
+        <div id="stateBox"></div>
       </div>
     </section>
 
+    <!-- Descrição real (embaixo de tudo) -->
     <section class="desc-bottom">
       <h2>Descrição</h2>
       <p id="descText">(Sem descrição)</p>
     </section>
   </main>
 
+  <!-- Rodapé -->
   <div data-include="../components/footer.html"></div>
 
   <script type="module">
@@ -90,21 +149,86 @@
     async function loadRemoteConfig(){
       try {
         const res = await fetch(CONFIG.BASE_API_URL + "/api/config", { cache: "no-store" });
-        return await res.json();
+        if (!res.ok) return { __error: `Erro ${res.status} ao buscar config` };
+        return await res.json(); // pode ser null
       } catch {
-        return { __error: "Falha ao carregar configuração" };
+        return { __error: "Falha de rede/CORS ao buscar config" };
       }
     }
 
+    function setState(title, detail){
+      const box = document.getElementById("stateBox");
+      box.innerHTML = `
+        <div class="state">
+          ${esc(title)}
+          ${detail ? `<small>${esc(detail)}</small>` : ""}
+        </div>
+      `;
+    }
+
     function applyTopLogo(cfg){
+      const top = document.getElementById("topLogo");
       const img = document.getElementById("logoImg");
       const ph = document.getElementById("logoPlaceholder");
+
+      top.classList.remove("is-center","is-left","is-purple");
+
+      const align = cfg.header?.align || "center";
+      const bg = cfg.header?.bg || "white";
+
+      top.classList.add(align === "left" ? "is-left" : "is-center");
+      if (bg === "purple") top.classList.add("is-purple");
 
       if (cfg.header?.logoUrl) {
         img.src = cfg.header.logoUrl;
         img.style.display = "block";
         ph.style.display = "none";
+      } else {
+        img.style.display = "none";
+        ph.style.display = "block";
       }
+    }
+
+    function renderOptions(cfg){
+      const optionsArea = document.getElementById("optionsArea");
+      optionsArea.innerHTML = "";
+
+      const options = Array.isArray(cfg.options) ? cfg.options : [];
+      if (!options.length) return;
+
+      options.forEach((opt) => {
+        const label = opt?.label || "Opção";
+        const values = Array.isArray(opt?.values) ? opt.values.filter(Boolean) : [];
+        if (!values.length) return;
+
+        const def = opt?.default && values.includes(opt.default) ? opt.default : values[0];
+
+        const sec = document.createElement("div");
+        sec.className = "section";
+
+        const title = document.createElement("div");
+        title.style.fontWeight = "900";
+        title.style.marginBottom = "8px";
+        title.innerHTML = `Selecione: <span style="color:var(--brand)">${esc(label)}</span>`;
+        sec.appendChild(title);
+
+        const chips = document.createElement("div");
+        chips.className = "chips";
+
+        values.forEach((v) => {
+          const btn = document.createElement("button");
+          btn.className = "chip" + (v === def ? " is-active" : "");
+          btn.textContent = v;
+          btn.addEventListener("click", () => {
+            chips.querySelectorAll(".chip").forEach(c => c.classList.remove("is-active"));
+            btn.classList.add("is-active");
+          });
+          chips.appendChild(btn);
+        });
+
+        sec.appendChild(chips);
+        optionsArea.appendChild(sec);
+      });
     }
 
     function renderGallery(cfg){
@@ -112,92 +236,169 @@
       const mainImg = document.getElementById("mainImg");
       thumbs.innerHTML = "";
 
-      const imgs = cfg.images || [];
-      if (!imgs.length) return;
+      const imgs = Array.isArray(cfg.images) ? cfg.images.filter(Boolean) : [];
+
+      if (!imgs.length) {
+        mainImg.src = "../assets/img/hero.png";
+        const btn = document.createElement("button");
+        btn.className = "thumb";
+        btn.innerHTML = `<img src="../assets/img/hero.png" alt="thumb">`;
+        btn.addEventListener("click", () => { mainImg.src = "../assets/img/hero.png"; });
+        thumbs.appendChild(btn);
+        return;
+      }
 
       mainImg.src = imgs[0];
 
-      imgs.forEach(src => {
-        const b = document.createElement("button");
-        b.className = "thumb";
-        b.innerHTML = `<img src="${src}" alt="">`;
-        b.onclick = () => mainImg.src = src;
-        thumbs.appendChild(b);
+      imgs.slice(0, 6).forEach((src, i) => {
+        const btn = document.createElement("button");
+        btn.className = "thumb";
+        btn.setAttribute("data-src", src);
+        btn.setAttribute("aria-label", `Imagem ${i+1}`);
+        btn.innerHTML = `<img src="${src}" alt="thumb ${i+1}">`;
+        btn.addEventListener("click", () => { mainImg.src = src; });
+        thumbs.appendChild(btn);
       });
     }
 
     function render(cfg){
       CURRENT_CFG = cfg;
+
       document.title = cfg.title || "Produto";
-      document.getElementById("productTitle").textContent = cfg.title || "";
+      document.getElementById("productTitle").textContent = cfg.title || "Produto";
       document.getElementById("productCode").textContent = cfg.code ? `(Cód: ${cfg.code})` : "";
 
       const ul = document.getElementById("importantList");
       ul.innerHTML = "";
-      (cfg.importantLines || []).forEach(t => {
+      const imp = Array.isArray(cfg.importantLines) ? cfg.importantLines : [];
+      if (!imp.length) {
         const li = document.createElement("li");
-        li.textContent = t;
+        li.textContent = "Nenhuma informação cadastrada.";
         ul.appendChild(li);
-      });
+      } else {
+        imp.forEach((line) => {
+          const li = document.createElement("li");
+          li.textContent = line;
+          ul.appendChild(li);
+        });
+      }
 
+      const pix = cfg.pixPrice || "";
       document.getElementById("pixPriceLine").innerHTML =
-        `R$ ${esc(cfg.pixPrice)} <span class="small muted">no pix</span>`;
+        `R$ ${esc(pix)} <span class="small" style="font-weight:700;color:var(--muted)">no pix</span>`;
 
-      document.getElementById("cardPriceLine").textContent =
-        cfg.cardPrice ? `Cartão: R$ ${cfg.cardPrice}` : "";
+      const cardLine = document.getElementById("cardPriceLine");
+      if (cfg.cardPrice && cfg.installments && cfg.installmentValue) {
+        cardLine.textContent =
+          `ou R$ ${cfg.cardPrice} em até ${cfg.installments}x de R$ ${cfg.installmentValue} sem juros`;
+      } else if (cfg.cardPrice) {
+        cardLine.textContent = `Cartão: R$ ${cfg.cardPrice}`;
+      } else {
+        cardLine.textContent = "";
+      }
 
+      const badges = [];
+      if (cfg.payments?.pix) badges.push("Pix");
+      if (cfg.payments?.card) badges.push("Cartão");
+      if (cfg.payments?.boleto) badges.push("Boleto");
       document.getElementById("paymentBadges").innerHTML =
-        Object.entries(cfg.payments || {})
-          .filter(([_,v])=>v)
-          .map(([k])=>`<span class="tag">${k}</span>`)
-          .join(" ");
+        badges.map(p => `<span class="tag">${esc(p)}</span>`).join(" ");
 
       document.getElementById("descText").textContent =
-        cfg.descriptionText || "";
+        (cfg.descriptionText && cfg.descriptionText.trim()) ? cfg.descriptionText.trim() : "(Sem descrição)";
 
       applyTopLogo(cfg);
       renderGallery(cfg);
+      renderOptions(cfg);
+    }
+
+    function priceToNumberBRL(pixPrice){
+      const n = Number(String(pixPrice || "0").replace(/\./g, "").replace(",", "."));
+      return Number.isFinite(n) ? n : 0;
     }
 
     async function comprarAgora(){
+      // Tracking (Worker)
       fetch(CONFIG.BASE_API_URL + "/api/track", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ event:"checkout_click" })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "checkout_click" })
       }).catch(()=>{});
 
-      const res = await fetch(CONFIG.BASE_API_URL + "/api/create_preference", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({})
-      });
+      // GA4 begin_checkout
+      if (window.gtag && CURRENT_CFG) {
+        try {
+          gtag('event', 'begin_checkout', {
+            currency: 'BRL',
+            value: priceToNumberBRL(CURRENT_CFG.pixPrice),
+            item_name: CURRENT_CFG.title || 'Produto digital'
+          });
+        } catch {}
+      }
 
-      const data = await res.json();
-      if (!data.init_point) {
-        alert("Erro ao iniciar pagamento");
+      const btn = document.getElementById("buyNowBtn");
+      btn.disabled = true;
+      btn.textContent = "Abrindo pagamento...";
+
+      try {
+        const res = await fetch(CONFIG.BASE_API_URL + "/api/create_preference", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({})
+        });
+
+        const data = await res.json().catch(()=> ({}));
+
+        if (!res.ok || !data.init_point) {
+          alert("Erro ao iniciar pagamento. Verifique Worker/Mercado Pago.");
+          btn.disabled = false;
+          btn.textContent = "Comprar agora";
+          return;
+        }
+
+        fetch(CONFIG.BASE_API_URL + "/api/track", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ event: "checkout_redirect" })
+        }).catch(()=>{});
+
+        if (window.gtag) {
+          try { gtag('event', 'checkout_redirect', { method: 'mercadopago' }); } catch {}
+        }
+
+        window.location.href = data.init_point;
+      } catch {
+        alert("Falha de rede ao iniciar pagamento.");
+        btn.disabled = false;
+        btn.textContent = "Comprar agora";
+      }
+    }
+
+    (async () => {
+      const cfg = await loadRemoteConfig();
+
+      if (cfg && cfg.__error) {
+        setState("Erro ao carregar", cfg.__error);
+        document.getElementById("productTitle").textContent = "Produto";
         return;
       }
 
-      fetch(CONFIG.BASE_API_URL + "/api/track", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ event:"checkout_redirect" })
-      }).catch(()=>{});
+      if (cfg === null) {
+        setState("Produto ainda não configurado", "Abra o admin e clique em “Salvar no servidor”.");
+        document.getElementById("productTitle").textContent = "Produto";
+        return;
+      }
 
-      window.location.href = data.init_point;
-    }
-
-    (async ()=>{
-      const cfg = await loadRemoteConfig();
       render(cfg);
 
+      // Tracking page_view
       fetch(CONFIG.BASE_API_URL + "/api/track", {
-        method:"POST",
-        headers:{ "Content-Type":"application/json" },
-        body: JSON.stringify({ event:"page_view" })
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ event: "page_view" })
       }).catch(()=>{});
 
-      document.getElementById("buyNowBtn").onclick = comprarAgora;
+      document.getElementById("buyNowBtn").addEventListener("click", comprarAgora);
     })();
   </script>
 </body>
