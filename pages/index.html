@@ -5,6 +5,15 @@
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <title>Produto</title>
 
+  <!-- ✅ Google Analytics GA4 (troque G-XXXXXXXXXX pelo seu Measurement ID) -->
+  <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+  <script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){ dataLayer.push(arguments); }
+    gtag('js', new Date());
+    gtag('config', 'G-XXXXXXXXXX', { anonymize_ip: true });
+  </script>
+
   <link rel="stylesheet" href="../assets/css/base.css" />
   <link rel="stylesheet" href="../assets/css/layout.css" />
   <link rel="stylesheet" href="../assets/css/components.css" />
@@ -57,7 +66,6 @@
       margin-top:6px;
     }
 
-    /* Campo de e-mail bem alinhado ao layout */
     .email-field{
       margin-top: 12px;
       display:block;
@@ -99,7 +107,6 @@
 
   <main class="container">
     <section class="product" id="productWrap">
-      <!-- GALERIA -->
       <div class="gallery">
         <div class="thumbs" id="thumbs"></div>
 
@@ -108,7 +115,6 @@
         </div>
       </div>
 
-      <!-- INFOS -->
       <div class="product-info">
         <h1 id="productTitle">Carregando...</h1>
         <div class="code" id="productCode"></div>
@@ -126,7 +132,6 @@
 
           <div id="paymentBadges" style="margin-top:10px;"></div>
 
-          <!-- ✅ E-mail obrigatório -->
           <div class="email-field">
             <label for="buyerEmail">Seu e-mail (obrigatório)</label>
             <input id="buyerEmail" type="email" placeholder="voce@exemplo.com" autocomplete="email" />
@@ -153,6 +158,8 @@
   <script type="module">
     import { CONFIG } from "../assets/js/config.js";
 
+    let CURRENT_CFG = null;
+
     function esc(str){
       return String(str || "").replace(/[&<>"']/g, m => ({
         "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
@@ -163,7 +170,7 @@
       try {
         const res = await fetch(CONFIG.BASE_API_URL + "/api/config", { cache: "no-store" });
         if (!res.ok) return { __error: `Erro ${res.status} ao buscar config` };
-        return await res.json(); // pode ser null
+        return await res.json();
       } catch {
         return { __error: "Falha de rede/CORS ao buscar config" };
       }
@@ -275,12 +282,12 @@
     }
 
     function render(cfg){
-      document.title = cfg.title || "Produto";
+      CURRENT_CFG = cfg;
 
+      document.title = cfg.title || "Produto";
       document.getElementById("productTitle").textContent = cfg.title || "Produto";
       document.getElementById("productCode").textContent = cfg.code ? `(Cód: ${cfg.code})` : "";
 
-      // Informações importantes
       const ul = document.getElementById("importantList");
       ul.innerHTML = "";
       const imp = Array.isArray(cfg.importantLines) ? cfg.importantLines : [];
@@ -296,7 +303,6 @@
         });
       }
 
-      // Preço
       const pix = cfg.pixPrice || "";
       document.getElementById("pixPriceLine").innerHTML =
         `R$ ${esc(pix)} <span class="small" style="font-weight:700;color:var(--muted)">no pix</span>`;
@@ -311,7 +317,6 @@
         cardLine.textContent = "";
       }
 
-      // Badges pagamento
       const badges = [];
       if (cfg.payments?.pix) badges.push("Pix");
       if (cfg.payments?.card) badges.push("Cartão");
@@ -319,13 +324,18 @@
       document.getElementById("paymentBadges").innerHTML =
         badges.map(p => `<span class="tag">${esc(p)}</span>`).join(" ");
 
-      // Descrição real embaixo
       document.getElementById("descText").textContent =
         (cfg.descriptionText && cfg.descriptionText.trim()) ? cfg.descriptionText.trim() : "(Sem descrição)";
 
       applyTopLogo(cfg);
       renderGallery(cfg);
       renderOptions(cfg);
+    }
+
+    function priceToNumberBRL(pixPrice){
+      // "5,00" -> 5.00, "1.299,00" -> 1299.00
+      const n = Number(String(pixPrice || "0").replace(/\./g, "").replace(",", "."));
+      return Number.isFinite(n) ? n : 0;
     }
 
     async function comprarAgora(){
@@ -337,6 +347,17 @@
         alert("Digite um e-mail válido para receber o link de download.");
         emailEl.focus();
         return;
+      }
+
+      // ✅ Evento GA4: begin_checkout
+      if (window.gtag && CURRENT_CFG) {
+        try {
+          gtag('event', 'begin_checkout', {
+            currency: 'BRL',
+            value: priceToNumberBRL(CURRENT_CFG.pixPrice),
+            item_name: CURRENT_CFG.title || 'Produto digital'
+          });
+        } catch {}
       }
 
       btn.disabled = true;
@@ -356,6 +377,13 @@
           btn.disabled = false;
           btn.textContent = "Comprar agora";
           return;
+        }
+
+        // ✅ Evento GA4: checkout_redirect
+        if (window.gtag) {
+          try {
+            gtag('event', 'checkout_redirect', { method: 'mercadopago' });
+          } catch {}
         }
 
         window.location.href = data.init_point;
@@ -382,7 +410,6 @@
       }
 
       render(cfg);
-
       document.getElementById("buyNowBtn").addEventListener("click", comprarAgora);
     })();
   </script>
