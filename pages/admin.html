@@ -16,6 +16,35 @@
     input,select{ padding:12px; border-radius:12px; border:1px solid var(--border); }
     .miniBox{ padding:12px; border:1px solid var(--border); border-radius:12px; background:#fff; }
   </style>
+  <style>
+  .image-item{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:10px;
+    padding:8px;
+    border-bottom:1px solid var(--border);
+  }
+
+  .image-item img{
+    height:50px;
+    border-radius:6px;
+  }
+
+  .remove-btn{
+    background:#ff4d4d;
+    color:#fff;
+    border:none;
+    border-radius:6px;
+    padding:6px 10px;
+    cursor:pointer;
+  }
+
+  .remove-btn:hover{
+    background:#e60000;
+  }
+</style>
+
 </head>
 
 <body>
@@ -116,7 +145,7 @@
 
       <div class="field">
         <label>Lista de URLs das imagens (será usada no site)</label>
-        <div id="imagesList" class="miniBox"></div>
+        <div id="imagesList" class="miniBox images-list"></div>
       </div>
 
       <button id="btnSave" class="btn btn--primary">Salvar no servidor</button>
@@ -131,3 +160,4 @@
   <script src="../assets/js/admin-online.js"></script>
 </body>
 </html>
+
