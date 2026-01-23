@@ -1,68 +1,157 @@
-// ADMIN ONLINE (sem import)
-// Base API do seu Worker:
-const BASE_API_URL = "https://impel-api.impelpersonalizados.workers.dev";
+/* =========================================================
+   ADMIN ONLINE (Worker atual)
+   - Upload: POST /api/admin/upload (Authorization: Bearer)
+   - Save:   POST /api/admin/save   (Authorization: Bearer)
+   - Get:    GET  /api/config
+   ========================================================= */
 
-const DEFAULT_CONFIG = {
-  title: "Produto",
-  code: "",
-  pixPrice: "0,00",
-  cardPrice: "",
-  installments: 1,
-  installmentValue: "",
-  payments: { pix: true, card: true, boleto: false },
-  importantLines: [],
-  descriptionText: "",
-  options: [],
-  images: [],
-  header: { logoUrl: "", align: "center", bg: "white" },
-  footer: {
-    whatsapp: "(74) 99964-1627",
-    instagram: "@impelpersonalizados",
-    email: "impelpersonalizados@gmail.com"
-  }
-};
+import { CONFIG } from "./config.js";
 
-function $(id){ return document.getElementById(id); }
+const API_UPLOAD = "/api/admin/upload";
+const API_SAVE   = "/api/admin/save";
+const API_GET    = "/api/config";
 
-async function apiGetConfig(){
-  const res = await fetch(`${BASE_API_URL}/api/config`);
-  if(!res.ok) return null;
-  return await res.json();
+let productImages = [];
+
+// -------------------- Helpers --------------------
+function $(id) { return document.getElementById(id); }
+
+function setMsg(text, ok = true) {
+  const el = $("msg");
+  if (!el) return;
+  el.textContent = text || "";
+  el.style.color = ok ? "#0a7a2f" : "#b00020";
 }
 
-async function apiSaveConfig(token, cfg){
-  return await fetch(`${BASE_API_URL}/api/admin/save`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${token}`
-    },
-    body: JSON.stringify(cfg)
+async function fetchJSON(path, options = {}) {
+  const res = await fetch(CONFIG.BASE_API_URL + path, options);
+  const text = await res.text();
+  let data;
+  try { data = text ? JSON.parse(text) : {}; }
+  catch { data = { raw: text }; }
+
+  if (!res.ok) {
+    const msg = data?.error || data?.message || data?.detail || `HTTP ${res.status}`;
+    const err = new Error(msg);
+    err.status = res.status;
+    err.data = data;
+    throw err;
+  }
+  return data;
+}
+
+function authHeaders() {
+  const token = ($("adminToken")?.value || "").trim();
+  if (!token) return null;
+  return { "Authorization": `Bearer ${token}` };
+}
+
+// -------------------- Render imagens + remover --------------------
+function renderImages() {
+  const list = $("imagesList");
+  if (!list) return;
+
+  list.innerHTML = "";
+
+  if (!productImages.length) {
+    list.innerHTML = `<div class="muted">Nenhuma imagem adicionada ainda.</div>`;
+    return;
+  }
+
+  productImages.forEach((url, index) => {
+    const div = document.createElement("div");
+    div.className = "image-item";
+
+    div.innerHTML = `
+      <img src="${url}" alt="Imagem ${index + 1}">
+      <span style="flex:1; word-break:break-all;">${url}</span>
+      <button type="button" class="remove-btn">Remover</button>
+    `;
+
+    div.querySelector(".remove-btn").onclick = () => removeImage(index);
+    list.appendChild(div);
   });
 }
 
-async function apiUpload(token, file){
+function removeImage(index) {
+  productImages.splice(index, 1);
+  renderImages();
+}
+
+// -------------------- Upload (logo e imagens) --------------------
+async function uploadFile(file) {
+  const headers = authHeaders();
+  if (!headers) throw new Error("Cole o ADMIN TOKEN primeiro.");
+
   const fd = new FormData();
   fd.append("file", file, file.name);
 
-  const res = await fetch(`${BASE_API_URL}/api/admin/upload`, {
+  const data = await fetchJSON(API_UPLOAD, {
     method: "POST",
-    headers: { "Authorization": `Bearer ${token}` },
+    headers,
     body: fd
   });
 
-  if(!res.ok) throw new Error("upload failed");
-  return await res.json(); // { ok, url, key }
+  // Worker retorna { ok:true, key, url }
+  if (!data?.url) throw new Error("Upload não retornou 'url'.");
+  return data.url;
 }
 
-function setMsg(text){ $("msg").textContent = text; }
+// -------------------- Coletar / Preencher Form --------------------
+function collectForm(cfg) {
+  // cfg é o config inteiro salvo no KV. Vamos atualizar só o que editamos.
+  cfg = cfg && typeof cfg === "object" ? cfg : {};
 
-function fillForm(cfg){
+  const important = ($("importantLines")?.value || "")
+    .split("\n").map(s => s.trim()).filter(Boolean);
+
+  cfg.title = $("title")?.value?.trim() || cfg.title || "";
+  cfg.code = $("code")?.value?.trim() || cfg.code || "";
+
+  cfg.pixPrice = $("pixPrice")?.value?.trim() || cfg.pixPrice || "";
+  cfg.cardPrice = $("cardPrice")?.value?.trim() || cfg.cardPrice || "";
+
+  cfg.installments = Number($("installments")?.value || cfg.installments || 1);
+  cfg.installmentValue = $("installmentValue")?.value?.trim() || cfg.installmentValue || "";
+
+  cfg.importantLines = important;
+  cfg.descriptionText = $("descriptionText")?.value || "";
+
+  cfg.payments = {
+    pix: !!$("payPix")?.checked,
+    card: !!$("payCard")?.checked,
+    boleto: !!$("payBoleto")?.checked
+  };
+
+  cfg.header = cfg.header || {};
+  cfg.header.logoUrl = $("logoUrl")?.value?.trim() || cfg.header.logoUrl || "";
+  cfg.header.align = $("logoAlign")?.value || cfg.header.align || "center";
+  cfg.header.bg = $("topBg")?.value || cfg.header.bg || "white";
+
+  // imagens do produto
+  cfg.images = productImages.slice();
+
+  // 🔥 produto para download no R2 (se já usa)
+  // se você quiser controlar no admin, crie campos no HTML.
+  cfg.product = cfg.product || cfg.product || {};
+  cfg.product.fileKey = cfg.product.fileKey || "produtos/caixa-cofre-5000.zip";
+  cfg.product.filename = cfg.product.filename || "caixa-cofre-5000.zip";
+  cfg.product.id = cfg.product.id || "cofre_5000_laser";
+  cfg.product.title = cfg.product.title || cfg.title || "Produto";
+
+  return cfg;
+}
+
+function fillForm(cfg) {
+  cfg = cfg && typeof cfg === "object" ? cfg : {};
+
   $("title").value = cfg.title || "";
   $("code").value = cfg.code || "";
+
   $("pixPrice").value = cfg.pixPrice || "";
   $("cardPrice").value = cfg.cardPrice || "";
-  $("installments").value = cfg.installments || 1;
+
+  $("installments").value = cfg.installments ?? 1;
   $("installmentValue").value = cfg.installmentValue || "";
 
   $("importantLines").value = (cfg.importantLines || []).join("\n");
@@ -72,119 +161,98 @@ function fillForm(cfg){
   $("payCard").checked = !!cfg.payments?.card;
   $("payBoleto").checked = !!cfg.payments?.boleto;
 
+  $("logoUrl").value = cfg.header?.logoUrl || "";
   $("logoAlign").value = cfg.header?.align || "center";
   $("topBg").value = cfg.header?.bg || "white";
-  $("logoUrl").value = cfg.header?.logoUrl || "";
 
-  // Mostrar lista de imagens já enviadas (opcional)
-  const box = $("imagesList");
-  if (box) {
-    const imgs = cfg.images || [];
-    box.innerHTML = imgs.length
-      ? imgs.map((u) => `<div style="word-break:break-all;margin:6px 0;">${u}</div>`).join("")
-      : "<span style='color:#6b6b76'>Nenhuma imagem enviada ainda.</span>";
+  productImages = Array.isArray(cfg.images) ? cfg.images.slice() : [];
+  renderImages();
+}
+
+// -------------------- Carregar config atual --------------------
+async function loadConfig() {
+  const cfg = await fetchJSON(API_GET, { method: "GET" });
+  return cfg || {};
+}
+
+// -------------------- Eventos --------------------
+document.addEventListener("DOMContentLoaded", async () => {
+  renderImages();
+
+  // Carrega config do servidor (sem precisar token)
+  try {
+    setMsg("Carregando configurações...", true);
+    window.__cfg = await loadConfig();
+    fillForm(window.__cfg);
+    setMsg("Config carregada ✅", true);
+  } catch (err) {
+    setMsg(`Não foi possível carregar config: ${err.message}`, false);
+    window.__cfg = {};
   }
-}
 
-function readForm(cfg){
-  cfg.title = $("title").value.trim();
-  cfg.code = $("code").value.trim();
-  cfg.pixPrice = $("pixPrice").value.trim();
-  cfg.cardPrice = $("cardPrice").value.trim();
-  cfg.installments = Number($("installments").value || 1);
-  cfg.installmentValue = $("installmentValue").value.trim();
-
-  cfg.importantLines = $("importantLines").value.split("\n").map(s=>s.trim()).filter(Boolean);
-  cfg.descriptionText = $("descriptionText").value;
-
-  cfg.payments = {
-    pix: $("payPix").checked,
-    card: $("payCard").checked,
-    boleto: $("payBoleto").checked
-  };
-
-  cfg.header = cfg.header || {};
-  cfg.header.align = $("logoAlign").value;
-  cfg.header.bg = $("topBg").value;
-  cfg.header.logoUrl = $("logoUrl").value.trim();
-  cfg.product = cfg.product || {};
-  cfg.product.fileKey = "produtos/produto.zip";
-  cfg.product.filename = "produto.zip";
-
-  // ✅ Arquivo do produto no R2 (OBRIGATÓRIO para /api/download funcionar)
-cfg.product = cfg.product || {};
-cfg.product.fileKey = "produtos/produto.zip"; // <-- troque se seu arquivo tiver outro nome
-cfg.product.filename = "produto.zip";         // <-- nome que o cliente vai baixar
-
-  return cfg;
-}
-
-window.addEventListener("DOMContentLoaded", async () => {
-  let cfg = await apiGetConfig();
-  if(!cfg) cfg = structuredClone(DEFAULT_CONFIG);
-
-  fillForm(cfg);
-  setMsg("Config carregada do servidor ✅");
-
-  $("logoFile").addEventListener("change", async (e) => {
-    const token = $("adminToken").value.trim();
+  // Upload LOGO
+  $("logoFile")?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
-    if(!token) return setMsg("Coloque o ADMIN TOKEN antes de enviar a logo.");
-    if(!file) return;
+    if (!file) return;
 
-    setMsg("Enviando logo...");
     try {
-      const up = await apiUpload(token, file);
-      $("logoUrl").value = up.url;
-      setMsg("Logo enviada ✅ Agora clique em SALVAR.");
-    } catch {
-      setMsg("Erro ao enviar logo ❌");
+      setMsg("Enviando logo...", true);
+      const url = await uploadFile(file);
+      $("logoUrl").value = url;
+      setMsg("Logo enviada ✅", true);
+    } catch (err) {
+      setMsg(`Erro no upload da logo: ${err.message}`, false);
+    } finally {
+      e.target.value = "";
     }
-    $("logoFile").value = "";
   });
 
-  $("imgsFile").addEventListener("change", async (e) => {
-    const token = $("adminToken").value.trim();
+  // Upload IMAGENS
+  $("imgsFile")?.addEventListener("change", async (e) => {
     const files = Array.from(e.target.files || []);
-    if(!token) return setMsg("Coloque o ADMIN TOKEN antes de enviar imagens.");
-    if(!files.length) return;
+    if (!files.length) return;
 
-    setMsg("Enviando imagens...");
     try {
-      cfg = readForm(cfg);
-      cfg.images = cfg.images || [];
+      setMsg(`Enviando ${files.length} imagem(ns)...`, true);
 
-      for (const f of files) {
-        const up = await apiUpload(token, f);
-        cfg.images.push(up.url);
+      for (const file of files) {
+        const url = await uploadFile(file);
+        productImages.push(url);
       }
 
-      fillForm(cfg);
-      setMsg("Imagens enviadas ✅ Agora clique em SALVAR.");
-    } catch {
-      setMsg("Erro ao enviar imagens ❌");
+      renderImages();
+      setMsg("Imagens enviadas e adicionadas ✅", true);
+    } catch (err) {
+      setMsg(`Erro no upload das imagens: ${err.message}`, false);
+    } finally {
+      e.target.value = "";
     }
-    $("imgsFile").value = "";
   });
 
-  $("btnSave").addEventListener("click", async () => {
-    const token = $("adminToken").value.trim();
-    if(!token) return setMsg("Coloque o ADMIN TOKEN antes de salvar.");
+  // SALVAR config
+  $("btnSave")?.addEventListener("click", async () => {
+    const headers = authHeaders();
+    if (!headers) return setMsg("Cole o ADMIN TOKEN.", false);
 
-    cfg = readForm(cfg);
-
-    setMsg("Salvando no servidor...");
     try {
-      const res = await apiSaveConfig(token, cfg);
-      if(res.ok) {
-        setMsg("Salvo ONLINE ✅ Agora qualquer dispositivo verá.");
-      } else if (res.status === 401) {
-        setMsg("Erro 401: ADMIN TOKEN errado ❌");
-      } else {
-        setMsg("Falha ao salvar ❌");
-      }
-    } catch {
-      setMsg("Falha de rede/CORS ❌ (veja console F12)");
+      setMsg("Salvando no servidor...", true);
+
+      const cfg = collectForm(window.__cfg);
+
+      const data = await fetchJSON(API_SAVE, {
+        method: "POST",
+        headers: {
+          ...headers,
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(cfg)
+      });
+
+      // atualiza cache local
+      window.__cfg = cfg;
+      setMsg(data?.ok ? "Salvo com sucesso ✅" : "Salvo ✅", true);
+    } catch (err) {
+      setMsg(`Erro ao salvar: ${err.message}`, false);
     }
   });
 });
