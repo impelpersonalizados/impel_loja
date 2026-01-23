@@ -10,48 +10,89 @@
   <link rel="stylesheet" href="../assets/css/components.css" />
 
   <style>
-    .box{ max-width: 900px; margin: 0 auto; }
+    .box{ max-width: 980px; margin: 0 auto; }
     .field{ display:flex; flex-direction:column; gap:6px; margin: 10px 0; }
     textarea{ min-height: 120px; padding:12px; border-radius:12px; border:1px solid var(--border); }
     input,select{ padding:12px; border-radius:12px; border:1px solid var(--border); }
+
+    .grid2{ display:grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+    @media (max-width: 860px){ .grid2{ grid-template-columns: 1fr; } }
+
     .miniBox{ padding:12px; border:1px solid var(--border); border-radius:12px; background:#fff; }
+
+    /* Lista imagens */
+    .imagesList{ margin-top: 10px; }
+    .image-item{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      padding:10px;
+      border:1px solid var(--border);
+      border-radius:12px;
+      background:#fff;
+      margin-bottom:10px;
+    }
+    .image-item img{
+      width:72px;
+      height:72px;
+      object-fit:cover;
+      border-radius:10px;
+      pointer-events:none;
+      border:1px solid rgba(0,0,0,.06);
+    }
+    .image-item .meta{
+      flex:1;
+      min-width: 0;
+    }
+    .image-item .meta .url{
+      font-size: 12px;
+      color: var(--muted);
+      word-break: break-all;
+      line-height: 1.35;
+    }
+    .image-item .meta .badge{
+      display:inline-block;
+      font-size: 12px;
+      font-weight: 900;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: #f7f4ff;
+      border: 1px solid #e5dcff;
+      margin-bottom: 6px;
+      color:#2b1d43;
+    }
+    .img-actions{
+      display:flex;
+      flex-direction:column;
+      gap:8px;
+    }
+    .btn-mini{
+      padding:8px 10px;
+      border-radius:10px;
+      border:1px solid var(--border);
+      background:#fff;
+      cursor:pointer;
+      font-weight:900;
+      font-size: 12px;
+      white-space: nowrap;
+    }
+    .btn-mini:hover{ border-color: var(--brand); }
+    .btn-danger{
+      border-color:#ffc9c9 !important;
+      background:#fff1f1 !important;
+      color:#8a1c1c !important;
+    }
+    .btn-danger:hover{ border-color:#ff7b7b !important; }
   </style>
-  <style>
-  .image-item{
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    gap:10px;
-    padding:8px;
-    border-bottom:1px solid var(--border);
-  }
-
-  .image-item img{
-    height:50px;
-    border-radius:6px;
-  }
-
-  .remove-btn{
-    background:#ff4d4d;
-    color:#fff;
-    border:none;
-    border-radius:6px;
-    padding:6px 10px;
-    cursor:pointer;
-  }
-
-  .remove-btn:hover{
-    background:#e60000;
-  }
-</style>
-
 </head>
 
 <body>
   <main class="container">
     <div class="box card">
       <h1 style="margin-top:0;">Admin (Online)</h1>
-      <p class="muted">Salva no servidor (Cloudflare KV) e funciona em qualquer dispositivo.</p>
+      <p class="muted">
+        Este painel salva no servidor (Cloudflare KV) e faz upload no R2.
+      </p>
 
       <div class="field">
         <label><b>ADMIN TOKEN</b></label>
@@ -60,34 +101,37 @@
 
       <hr class="sep"/>
 
-      <div class="field">
-        <label>Nome do produto</label>
-        <input id="title" />
+      <div class="grid2">
+        <div class="field">
+          <label>Nome do produto</label>
+          <input id="title" />
+        </div>
+        <div class="field">
+          <label>Código (opcional)</label>
+          <input id="code" />
+        </div>
       </div>
 
-      <div class="field">
-        <label>Código</label>
-        <input id="code" />
+      <div class="grid2">
+        <div class="field">
+          <label>Preço Pix (ex: 5,00)</label>
+          <input id="pixPrice" placeholder="5,00" />
+        </div>
+        <div class="field">
+          <label>Preço cartão (opcional)</label>
+          <input id="cardPrice" placeholder="5,00" />
+        </div>
       </div>
 
-      <div class="field">
-        <label>Preço Pix</label>
-        <input id="pixPrice" placeholder="129,00" />
-      </div>
-
-      <div class="field">
-        <label>Preço cartão</label>
-        <input id="cardPrice" placeholder="143,33" />
-      </div>
-
-      <div class="field">
-        <label>Parcelas</label>
-        <input id="installments" type="number" min="1" max="12" />
-      </div>
-
-      <div class="field">
-        <label>Valor da parcela</label>
-        <input id="installmentValue" placeholder="47,77" />
+      <div class="grid2">
+        <div class="field">
+          <label>Parcelas</label>
+          <input id="installments" type="number" min="1" max="12" />
+        </div>
+        <div class="field">
+          <label>Valor parcela</label>
+          <input id="installmentValue" placeholder="5,00" />
+        </div>
       </div>
 
       <div class="field">
@@ -111,53 +155,59 @@
 
       <hr class="sep"/>
 
-      <h3>Topo (Logo)</h3>
-      <div class="field">
-        <label>Upload de logo</label>
-        <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+      <h3 style="margin-bottom:8px;">Topo (Logo)</h3>
+      <div class="grid2">
+        <div class="field">
+          <label>Upload de logo</label>
+          <input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml" />
+        </div>
+        <div class="field">
+          <label>Logo URL</label>
+          <input id="logoUrl" placeholder="(preenchido automaticamente no upload)" />
+        </div>
       </div>
-      <div class="field">
-        <label>Logo URL</label>
-        <input id="logoUrl" />
-      </div>
-      <div class="field">
-        <label>Alinhamento</label>
-        <select id="logoAlign">
-          <option value="center">Centro</option>
-          <option value="left">Esquerda</option>
-        </select>
-      </div>
-      <div class="field">
-        <label>Cor topo</label>
-        <select id="topBg">
-          <option value="white">Branco</option>
-          <option value="purple">Lilás</option>
-        </select>
+
+      <div class="grid2">
+        <div class="field">
+          <label>Alinhamento</label>
+          <select id="logoAlign">
+            <option value="center">Centro</option>
+            <option value="left">Esquerda</option>
+          </select>
+        </div>
+        <div class="field">
+          <label>Cor topo</label>
+          <select id="topBg">
+            <option value="white">Branco</option>
+            <option value="purple">Lilás</option>
+          </select>
+        </div>
       </div>
 
       <hr class="sep"/>
 
-      <h3>Imagens do produto</h3>
+      <h3 style="margin-bottom:8px;">Imagens do produto</h3>
+
       <div class="field">
         <label>Upload de imagens (várias)</label>
         <input id="imgsFile" type="file" accept="image/png,image/jpeg,image/webp" multiple />
+        <div class="muted small">Dica: a primeira imagem da lista vira a imagem principal do produto.</div>
       </div>
 
       <div class="field">
-        <label>Lista de URLs das imagens (será usada no site)</label>
-        <div id="imagesList" class="miniBox images-list"></div>
+        <label>Lista de imagens (clique em Remover ou Definir como principal)</label>
+        <div id="imagesList" class="imagesList miniBox"></div>
       </div>
 
-      <button id="btnSave" class="btn btn--primary">Salvar no servidor</button>
-      <p id="msg" class="muted" style="margin-top:10px;"></p>
+      <div style="display:flex; gap:10px; flex-wrap:wrap; margin-top:12px;">
+        <button id="btnSave" class="btn btn--primary">Salvar no servidor</button>
+        <a class="btn" href="./index.html">Abrir página do produto</a>
+      </div>
 
-      <p style="margin-top:14px;">
-        <a href="./index.html">Abrir página do produto</a>
-      </p>
+      <p id="msg" class="muted" style="margin-top:10px;"></p>
     </div>
   </main>
 
-  <script src="../assets/js/admin-online.js"></script>
+  <script type="module" src="../assets/js/admin-online.js"></script>
 </body>
 </html>
-
