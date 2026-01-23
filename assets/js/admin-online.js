@@ -1,10 +1,3 @@
-/* =========================================================
-   ADMIN ONLINE (Worker atual)
-   - Upload: POST /api/admin/upload (Authorization: Bearer)
-   - Save:   POST /api/admin/save   (Authorization: Bearer)
-   - Get:    GET  /api/config
-   ========================================================= */
-
 import { CONFIG } from "./config.js";
 
 const API_UPLOAD = "/api/admin/upload";
@@ -13,17 +6,16 @@ const API_GET    = "/api/config";
 
 let productImages = [];
 
-// -------------------- Helpers --------------------
-function $(id) { return document.getElementById(id); }
+function $(id){ return document.getElementById(id); }
 
-function setMsg(text, ok = true) {
+function setMsg(text, ok = true){
   const el = $("msg");
-  if (!el) return;
+  if(!el) return;
   el.textContent = text || "";
   el.style.color = ok ? "#0a7a2f" : "#b00020";
 }
 
-async function fetchJSON(path, options = {}) {
+async function fetchJSON(path, options = {}){
   const res = await fetch(CONFIG.BASE_API_URL + path, options);
   const text = await res.text();
   let data;
@@ -40,20 +32,20 @@ async function fetchJSON(path, options = {}) {
   return data;
 }
 
-function authHeaders() {
+function authHeaders(){
   const token = ($("adminToken")?.value || "").trim();
-  if (!token) return null;
+  if(!token) return null;
   return { "Authorization": `Bearer ${token}` };
 }
 
-// -------------------- Render imagens + remover --------------------
-function renderImages() {
+/* ---------- Imagens (render + remover + principal) ---------- */
+function renderImages(){
   const list = $("imagesList");
-  if (!list) return;
+  if(!list) return;
 
   list.innerHTML = "";
 
-  if (!productImages.length) {
+  if(!productImages.length){
     list.innerHTML = `<div class="muted">Nenhuma imagem adicionada ainda.</div>`;
     return;
   }
@@ -62,26 +54,43 @@ function renderImages() {
     const div = document.createElement("div");
     div.className = "image-item";
 
+    const isMain = index === 0;
+
     div.innerHTML = `
       <img src="${url}" alt="Imagem ${index + 1}">
-      <span style="flex:1; word-break:break-all;">${url}</span>
-      <button type="button" class="remove-btn">Remover</button>
+      <div class="meta">
+        ${isMain ? `<div class="badge">PRINCIPAL</div>` : ``}
+        <div class="url">${url}</div>
+      </div>
+      <div class="img-actions">
+        <button type="button" class="btn-mini set-main">Definir como principal</button>
+        <button type="button" class="btn-mini btn-danger remove">Remover</button>
+      </div>
     `;
 
-    div.querySelector(".remove-btn").onclick = () => removeImage(index);
+    div.querySelector(".remove").onclick = () => {
+      if (confirm("Remover esta imagem da lista?")) {
+        productImages.splice(index, 1);
+        renderImages();
+      }
+    };
+
+    div.querySelector(".set-main").onclick = () => {
+      if (index === 0) return;
+      const item = productImages[index];
+      productImages.splice(index, 1);
+      productImages.unshift(item);
+      renderImages();
+    };
+
     list.appendChild(div);
   });
 }
 
-function removeImage(index) {
-  productImages.splice(index, 1);
-  renderImages();
-}
-
-// -------------------- Upload (logo e imagens) --------------------
-async function uploadFile(file) {
+/* ---------- Upload ---------- */
+async function uploadFile(file){
   const headers = authHeaders();
-  if (!headers) throw new Error("Cole o ADMIN TOKEN primeiro.");
+  if(!headers) throw new Error("Cole o ADMIN TOKEN primeiro.");
 
   const fd = new FormData();
   fd.append("file", file, file.name);
@@ -92,57 +101,12 @@ async function uploadFile(file) {
     body: fd
   });
 
-  // Worker retorna { ok:true, key, url }
-  if (!data?.url) throw new Error("Upload não retornou 'url'.");
+  if(!data?.url) throw new Error("Upload não retornou 'url'.");
   return data.url;
 }
 
-// -------------------- Coletar / Preencher Form --------------------
-function collectForm(cfg) {
-  // cfg é o config inteiro salvo no KV. Vamos atualizar só o que editamos.
-  cfg = cfg && typeof cfg === "object" ? cfg : {};
-
-  const important = ($("importantLines")?.value || "")
-    .split("\n").map(s => s.trim()).filter(Boolean);
-
-  cfg.title = $("title")?.value?.trim() || cfg.title || "";
-  cfg.code = $("code")?.value?.trim() || cfg.code || "";
-
-  cfg.pixPrice = $("pixPrice")?.value?.trim() || cfg.pixPrice || "";
-  cfg.cardPrice = $("cardPrice")?.value?.trim() || cfg.cardPrice || "";
-
-  cfg.installments = Number($("installments")?.value || cfg.installments || 1);
-  cfg.installmentValue = $("installmentValue")?.value?.trim() || cfg.installmentValue || "";
-
-  cfg.importantLines = important;
-  cfg.descriptionText = $("descriptionText")?.value || "";
-
-  cfg.payments = {
-    pix: !!$("payPix")?.checked,
-    card: !!$("payCard")?.checked,
-    boleto: !!$("payBoleto")?.checked
-  };
-
-  cfg.header = cfg.header || {};
-  cfg.header.logoUrl = $("logoUrl")?.value?.trim() || cfg.header.logoUrl || "";
-  cfg.header.align = $("logoAlign")?.value || cfg.header.align || "center";
-  cfg.header.bg = $("topBg")?.value || cfg.header.bg || "white";
-
-  // imagens do produto
-  cfg.images = productImages.slice();
-
-  // 🔥 produto para download no R2 (se já usa)
-  // se você quiser controlar no admin, crie campos no HTML.
-  cfg.product = cfg.product || cfg.product || {};
-  cfg.product.fileKey = cfg.product.fileKey || "produtos/caixa-cofre-5000.zip";
-  cfg.product.filename = cfg.product.filename || "caixa-cofre-5000.zip";
-  cfg.product.id = cfg.product.id || "cofre_5000_laser";
-  cfg.product.title = cfg.product.title || cfg.title || "Produto";
-
-  return cfg;
-}
-
-function fillForm(cfg) {
+/* ---------- Form ---------- */
+function fillForm(cfg){
   cfg = cfg && typeof cfg === "object" ? cfg : {};
 
   $("title").value = cfg.title || "";
@@ -169,31 +133,71 @@ function fillForm(cfg) {
   renderImages();
 }
 
-// -------------------- Carregar config atual --------------------
-async function loadConfig() {
+function collectForm(cfg){
+  cfg = cfg && typeof cfg === "object" ? cfg : {};
+
+  const important = ($("importantLines")?.value || "")
+    .split("\n").map(s => s.trim()).filter(Boolean);
+
+  cfg.title = $("title")?.value?.trim() || "";
+  cfg.code = $("code")?.value?.trim() || "";
+
+  cfg.pixPrice = $("pixPrice")?.value?.trim() || "";
+  cfg.cardPrice = $("cardPrice")?.value?.trim() || "";
+
+  cfg.installments = Number($("installments")?.value || 1);
+  cfg.installmentValue = $("installmentValue")?.value?.trim() || "";
+
+  cfg.importantLines = important;
+  cfg.descriptionText = $("descriptionText")?.value || "";
+
+  cfg.payments = {
+    pix: !!$("payPix")?.checked,
+    card: !!$("payCard")?.checked,
+    boleto: !!$("payBoleto")?.checked
+  };
+
+  cfg.header = cfg.header || {};
+  cfg.header.logoUrl = $("logoUrl")?.value?.trim() || "";
+  cfg.header.align = $("logoAlign")?.value || "center";
+  cfg.header.bg = $("topBg")?.value || "white";
+
+  cfg.images = productImages.slice();
+
+  // Produto do R2 (ajuste se seu nome for diferente)
+  cfg.product = cfg.product || {};
+  cfg.product.id = cfg.product.id || "cofre_5000_laser";
+  cfg.product.title = cfg.product.title || cfg.title || "Produto";
+  cfg.product.fileKey = cfg.product.fileKey || "produtos/caixa-cofre-5000.zip";
+  cfg.product.filename = cfg.product.filename || "caixa-cofre-5000.zip";
+
+  return cfg;
+}
+
+/* ---------- Load + Events ---------- */
+async function loadConfig(){
   const cfg = await fetchJSON(API_GET, { method: "GET" });
   return cfg || {};
 }
 
-// -------------------- Eventos --------------------
 document.addEventListener("DOMContentLoaded", async () => {
   renderImages();
 
-  // Carrega config do servidor (sem precisar token)
+  // carregar config atual
   try {
     setMsg("Carregando configurações...", true);
     window.__cfg = await loadConfig();
     fillForm(window.__cfg);
     setMsg("Config carregada ✅", true);
   } catch (err) {
-    setMsg(`Não foi possível carregar config: ${err.message}`, false);
     window.__cfg = {};
+    setMsg("Não foi possível carregar config: " + err.message, false);
   }
 
-  // Upload LOGO
+  // upload logo
   $("logoFile")?.addEventListener("change", async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
+    if(!file) return;
 
     try {
       setMsg("Enviando logo...", true);
@@ -201,38 +205,36 @@ document.addEventListener("DOMContentLoaded", async () => {
       $("logoUrl").value = url;
       setMsg("Logo enviada ✅", true);
     } catch (err) {
-      setMsg(`Erro no upload da logo: ${err.message}`, false);
+      setMsg("Erro no upload da logo: " + err.message, false);
     } finally {
       e.target.value = "";
     }
   });
 
-  // Upload IMAGENS
+  // upload imagens
   $("imgsFile")?.addEventListener("change", async (e) => {
     const files = Array.from(e.target.files || []);
-    if (!files.length) return;
+    if(!files.length) return;
 
     try {
       setMsg(`Enviando ${files.length} imagem(ns)...`, true);
-
       for (const file of files) {
         const url = await uploadFile(file);
         productImages.push(url);
       }
-
       renderImages();
-      setMsg("Imagens enviadas e adicionadas ✅", true);
+      setMsg("Imagens enviadas ✅ (lembre de salvar)", true);
     } catch (err) {
-      setMsg(`Erro no upload das imagens: ${err.message}`, false);
+      setMsg("Erro no upload das imagens: " + err.message, false);
     } finally {
       e.target.value = "";
     }
   });
 
-  // SALVAR config
+  // salvar
   $("btnSave")?.addEventListener("click", async () => {
     const headers = authHeaders();
-    if (!headers) return setMsg("Cole o ADMIN TOKEN.", false);
+    if(!headers) return setMsg("Cole o ADMIN TOKEN.", false);
 
     try {
       setMsg("Salvando no servidor...", true);
@@ -248,11 +250,10 @@ document.addEventListener("DOMContentLoaded", async () => {
         body: JSON.stringify(cfg)
       });
 
-      // atualiza cache local
       window.__cfg = cfg;
       setMsg(data?.ok ? "Salvo com sucesso ✅" : "Salvo ✅", true);
     } catch (err) {
-      setMsg(`Erro ao salvar: ${err.message}`, false);
+      setMsg("Erro ao salvar: " + err.message, false);
     }
   });
 });
